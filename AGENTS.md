@@ -8,7 +8,7 @@ This repository contains single-file HTML tools hosted via GitHub Pages. Each to
 
 **Low stakes experimentation**: These tools are small utilities. If one breaks or needs to be replaced, that's fine. This isn't production software—it's a collection of helpful gadgets.
 
-**LLM-friendly architecture**: Keep tools under ~500 lines. Any competent LLM can read, understand, and modify a tool of this size without losing context.
+**LLM-friendly architecture**: Keeping tools small (a few hundred lines) makes them easy for LLMs to read, understand, and modify. But don't artificially constrain yourself—if a tool needs more code to work well, that's fine.
 
 ---
 
