@@ -387,101 +387,318 @@ Before considering a tool complete:
 
 ---
 
-## Example: Minimal Tool Template
+## Example: Tool Template
 
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tool Name</title>
+    <title>Tool Name - Noah's Tools</title>
     <style>
+        /* ===== Theme Variables ===== */
+        :root {
+            --color-bg: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-text: #1a1a2e;
+            --color-text-muted: #6c757d;
+            --color-border: #dee2e6;
+            --color-primary: #4a90e2;
+            --color-primary-hover: #357abd;
+            --color-error: #dc3545;
+            --color-error-bg: #f8d7da;
+            --color-success: #28a745;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] {
+            --color-bg: #1a1a2e;
+            --color-surface: #252542;
+            --color-text: #e8e8e8;
+            --color-text-muted: #a0a0a0;
+            --color-border: #3d3d5c;
+            --color-primary: #5c9ce6;
+            --color-primary-hover: #7ab3f0;
+            --color-error: #f87171;
+            --color-error-bg: #3d2a2a;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== Base Styles ===== */
         * { box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
                          Helvetica, Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            background: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
             line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
         }
 
-        h1 { margin-top: 0; }
+        /* ===== Layout ===== */
+        .site-header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        textarea, input[type="text"] {
+        .site-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        .site-logo img {
+            height: 32px;
+            width: auto;
+        }
+
+        /* Theme-aware logo switching */
+        .logo-dark { display: none; }
+        .logo-light { display: block; }
+
+        [data-theme="dark"] .logo-dark { display: block; }
+        [data-theme="dark"] .logo-light { display: none; }
+
+        .theme-toggle {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--color-bg);
+        }
+
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .tool-container {
+            background: var(--color-surface);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+        }
+
+        .tool-description {
+            color: var(--color-text-muted);
+            margin: 0 0 24px 0;
+        }
+
+        /* ===== Form Elements ===== */
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        textarea, input[type="text"], input[type="url"] {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-family: monospace;
+            padding: 12px;
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
             font-size: 14px;
+            transition: border-color 0.2s;
         }
 
         textarea:focus, input:focus {
             outline: none;
-            border-color: #4a90e2;
+            border-color: var(--color-primary);
         }
 
-        textarea { min-height: 150px; resize: vertical; }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* ===== Buttons ===== */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
 
         button {
-            background: #4a90e2;
+            background: var(--color-primary);
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
         }
 
-        button:hover { background: #357abd; }
-
-        .output {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 4px;
-            display: none;
+        button:hover {
+            background: var(--color-primary-hover);
         }
 
-        .output.visible { display: block; }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
 
+        button.secondary {
+            background: var(--color-border);
+            color: var(--color-text);
+        }
+
+        button.secondary:hover {
+            background: var(--color-text-muted);
+            color: white;
+        }
+
+        /* ===== Output & Errors ===== */
         .error {
-            color: #dc3545;
-            background: #f8d7da;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
+            color: var(--color-error);
+            background: var(--color-error-bg);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 16px;
             display: none;
         }
 
         .error.visible { display: block; }
 
+        .output {
+            margin-top: 24px;
+            padding: 16px;
+            background: var(--color-bg);
+            border-radius: 6px;
+            display: none;
+        }
+
+        .output.visible { display: block; }
+
+        .output-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .output pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        /* ===== Footer ===== */
+        .site-footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--color-text-muted);
+            font-size: 14px;
+        }
+
+        .site-footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .site-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== Responsive ===== */
         @media (max-width: 600px) {
-            body { padding: 12px; }
+            main { padding: 16px 12px; }
+            .tool-container { padding: 16px; }
+            h1 { font-size: 20px; }
+            .button-group { flex-direction: column; }
+            button { width: 100%; }
         }
     </style>
 </head>
 <body>
-    <h1>Tool Name</h1>
-    <p>Brief description of what this tool does.</p>
+    <header class="site-header">
+        <a href="/" class="site-logo">
+            <img src="assets/logo-black-64.png" alt="" class="logo-light">
+            <img src="assets/logo-white-64.png" alt="" class="logo-dark">
+            <span>Noah's Tools</span>
+        </a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+            🌙
+        </button>
+    </header>
 
-    <label for="input">Input:</label>
-    <textarea id="input" placeholder="Enter your input here..."></textarea>
+    <main>
+        <article class="tool-container">
+            <h1>Tool Name</h1>
+            <p class="tool-description">Brief description of what this tool does.</p>
 
-    <button id="processBtn">Process</button>
-    <button id="copyBtn" style="background: #6c757d;">Copy Result</button>
+            <section class="tool-input">
+                <label for="input">Input:</label>
+                <textarea id="input" placeholder="Enter your input here..."></textarea>
+            </section>
 
-    <div id="error" class="error"></div>
+            <div class="button-group">
+                <button id="processBtn">Process</button>
+                <button id="copyBtn" class="secondary">Copy Result</button>
+            </div>
 
-    <div id="output" class="output">
-        <strong>Result:</strong>
-        <pre id="result"></pre>
-    </div>
+            <div id="error" class="error" role="alert"></div>
+
+            <section id="output" class="output">
+                <div class="output-label">Result:</div>
+                <pre id="result"></pre>
+            </section>
+        </article>
+    </main>
+
+    <footer class="site-footer">
+        <a href="https://github.com/noahkiss/tools">View on GitHub</a>
+    </footer>
 
     <script>
+        // ===== Theme Toggle =====
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        // Load saved theme or use system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemDark ? 'dark' : 'light');
+        html.setAttribute('data-theme', initialTheme);
+        themeToggle.textContent = initialTheme === 'dark' ? '☀️' : '🌙';
+
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+
+        // ===== Tool Logic =====
         const input = document.getElementById('input');
         const output = document.getElementById('output');
         const result = document.getElementById('result');
