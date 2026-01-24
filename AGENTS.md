@@ -457,12 +457,46 @@ Then use `var(--color-warning)` in your styles
 
 ---
 
-## Commit Messages
+## Git Workflow
 
-When creating or updating tools, use descriptive commit messages:
+**Always commit and push after creating or modifying tools.**
 
-- `Add json-formatter tool` - for new tools
-- `Fix edge case in json-formatter when input is empty` - for bug fixes
-- `Improve mobile layout for color-picker` - for improvements
+### Commit Message Templates
 
-Include a link to any relevant conversation transcript if the tool was created via LLM assistance.
+Use these formats, always including the tool name:
+
+| Action | Format | Example |
+|--------|--------|---------|
+| New tool | `Add {tool-name} tool` | `Add json-formatter tool` |
+| Bug fix | `Fix {tool-name}: {description}` | `Fix json-formatter: handle empty input` |
+| Enhancement | `Update {tool-name}: {description}` | `Update color-picker: add hex input` |
+| Styling | `Style {tool-name}: {description}` | `Style csv-parser: improve mobile layout` |
+| Multiple tools | `Add {tool-1}, {tool-2} tools` | `Add base64-encoder, base64-decoder tools` |
+
+### Commit and Push
+
+After completing work on a tool:
+
+```bash
+git add {tool-name}.html {tool-name}.docs.md README.md
+git commit -m "Add {tool-name} tool"
+git push
+```
+
+Or for all changes:
+
+```bash
+git add -A
+git commit -m "Add {tool-name} tool"
+git push
+```
+
+### Co-Author Attribution
+
+When Claude assists with creating a tool, include the co-author line:
+
+```bash
+git commit -m "Add {tool-name} tool
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```

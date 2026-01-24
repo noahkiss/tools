@@ -26,8 +26,9 @@ Follow this workflow:
    - Test on mobile viewport (375px width)
    - Use Playwright MCP tools if available for automated verification
 
-4. **Commit**
-   - Stage the new files
-   - Commit with message: `Add {tool-name} tool`
+4. **Commit and Push**
+   - Stage the new files: `git add {tool-name}.html {tool-name}.docs.md README.md`
+   - Commit with message: `Add {tool-name} tool` (include `Co-Authored-By: Claude <noreply@anthropic.com>`)
+   - Push to remote: `git push`
 
 Keep the tool simple and focused. Prefer real-time processing for instant operations, button-triggered for slower/error-prone ones. Always use CSS variables for colors so theming works correctly.
