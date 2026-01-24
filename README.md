@@ -10,7 +10,7 @@ View the live tools at: **https://noahkiss.github.io/tools/**
 
 ## Text & Data
 
-<!-- Add tools here as they're created -->
+- [Jiradown](https://noahkiss.github.io/tools/jiradown/) - Bidirectional Jira ↔ Markdown converter
 
 ## Image & Media
 
