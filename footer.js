@@ -6,13 +6,38 @@
  */
 
 (function() {
-    // Get current filename
+    // Parse the URL to determine tool path
     const pathname = window.location.pathname;
-    const filename = pathname.split('/').pop() || 'index.html';
-    const toolName = filename.replace('.html', '');
+    const parts = pathname.split('/').filter(Boolean);
 
-    // Don't add footer to index page (it has its own)
-    if (toolName === 'index' || toolName === '') {
+    // Determine if this is folder-based or legacy flat file
+    // Folder: /tools/jiradown/ or /tools/jiradown/index.html -> toolSlug = "jiradown"
+    // Legacy: /tools/json-formatter.html -> toolSlug = "json-formatter"
+    let toolSlug = '';
+    let isFolder = false;
+
+    if (parts.length === 0) {
+        return; // Root index, skip
+    }
+
+    const lastPart = parts[parts.length - 1];
+
+    if (lastPart === 'index.html' || lastPart === '') {
+        // Folder-based tool: use the directory name
+        toolSlug = parts[parts.length - 2] || parts[parts.length - 1];
+        isFolder = true;
+    } else if (lastPart.endsWith('.html')) {
+        // Legacy flat file
+        toolSlug = lastPart.replace('.html', '');
+        isFolder = false;
+    } else {
+        // Folder without trailing slash or index.html
+        toolSlug = lastPart;
+        isFolder = true;
+    }
+
+    // Don't add footer to main index
+    if (toolSlug === 'tools' || toolSlug === 'index' || toolSlug === '') {
         return;
     }
 
@@ -70,11 +95,17 @@
         document.head.appendChild(style);
     }
 
+    // Build GitHub URLs based on tool structure
+    const githubBase = 'https://github.com/noahkiss/tools';
+    const sourcePath = isFolder ? toolSlug : `${toolSlug}.html`;
+    const sourceUrl = `${githubBase}/tree/main/${sourcePath}`;
+    const historyUrl = `${githubBase}/commits/main/${sourcePath}`;
+
     footer.innerHTML = `
         <nav>
             <a href="/">← Home</a>
-            <a href="https://github.com/noahkiss/tools/blob/main/${filename}">View Source</a>
-            <a href="https://github.com/noahkiss/tools/commits/main/${filename}">History</a>
+            <a href="${sourceUrl}">View Source</a>
+            <a href="${historyUrl}">History</a>
         </nav>
     `;
 
