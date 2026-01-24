@@ -168,9 +168,9 @@ def update_index_with_tools(index_path: Path, tools: list):
     # Indent properly for the script
     tools_json = tools_json.replace("\n", "\n        ")
 
-    # Replace the empty tools array
+    # Replace the tools array (empty or populated)
     new_content = re.sub(
-        r"const tools = \[\];",
+        r"const tools = \[[\s\S]*?\];",
         f"const tools = {tools_json};",
         content
     )
