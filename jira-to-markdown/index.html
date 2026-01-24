@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jira to Markdown - Noah's Tools</title>
+    <title>Jira Markup Converter - Noah's Tools</title>
     <style>
         /* ===== Theme Variables ===== */
         :root {
@@ -72,10 +72,8 @@
             width: auto;
         }
 
-        /* Theme-aware logo switching */
         .logo-dark { display: none; }
         .logo-light { display: block; }
-
         [data-theme="dark"] .logo-dark { display: block; }
         [data-theme="dark"] .logo-light { display: none; }
 
@@ -94,7 +92,7 @@
         }
 
         main {
-            max-width: 1000px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 24px 20px;
         }
@@ -136,9 +134,32 @@
             font-weight: 500;
         }
 
+        .label-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .active-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-border);
+            transition: background 0.2s;
+        }
+
+        .editor-pane.active .active-indicator {
+            background: var(--color-success);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 6px;
+        }
+
         .editor-pane textarea {
             width: 100%;
-            height: 400px;
+            height: 500px;
             padding: 12px;
             border: 2px solid var(--color-border);
             border-radius: 6px;
@@ -156,9 +177,8 @@
             border-color: var(--color-primary);
         }
 
-        .output-pane textarea {
-            background: var(--color-surface);
-            border-style: dashed;
+        .editor-pane.active textarea {
+            border-color: var(--color-primary);
         }
 
         /* ===== Buttons ===== */
@@ -188,7 +208,7 @@
             color: white;
         }
 
-        .copy-btn.copied {
+        button.copied {
             background: var(--color-success);
         }
 
@@ -251,19 +271,6 @@
             font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
             font-size: 12px;
         }
-
-        /* ===== Responsive ===== */
-        @media (max-width: 768px) {
-            main { padding: 16px 12px; }
-            .tool-container { padding: 16px; }
-            h1 { font-size: 20px; }
-            .editor-container {
-                grid-template-columns: 1fr;
-            }
-            .editor-pane textarea {
-                height: 250px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -280,36 +287,89 @@
 
     <main>
         <article class="tool-container">
-            <h1>Jira to Markdown</h1>
-            <p class="tool-description">Convert Jira Server wiki markup to standard Markdown. Paste Jira markup on the left and see Markdown output on the right.</p>
+            <h1>Jira Markup Converter</h1>
+            <p class="tool-description">Bidirectional conversion between Jira Server wiki markup and Markdown. Edit either side and the other updates in real-time.</p>
 
             <div class="editor-container">
-                <div class="editor-pane input-pane">
+                <div class="editor-pane" id="jiraPane">
                     <label>
-                        <span>Jira Markup</span>
-                        <button id="clearBtn" class="secondary">Clear</button>
+                        <span class="label-text">
+                            <span class="active-indicator"></span>
+                            Jira Markup
+                        </span>
+                        <div class="button-group">
+                            <button id="clearJiraBtn" class="secondary">Clear</button>
+                            <button id="copyJiraBtn">Copy</button>
+                        </div>
                     </label>
-                    <textarea id="input" placeholder="Paste Jira markup here...
-
-Example:
-h1. Heading
+                    <textarea id="jiraInput" placeholder="h1. Heading
 *bold* and _italic_
-{code:java}
-public class Hello {}
+-strikethrough- and +underline+
+{{monospace}} inline code
+
+{code:javascript}
+const hello = 'world';
 {code}
+
 # numbered list
+## nested item
 * bullet list
-[link text|http://example.com]
-||header||header||
-|cell|cell|"></textarea>
+** nested item
+
+[link text|https://example.com]
+!image.png|alt=description!
+
+||Header 1||Header 2||
+|Cell 1|Cell 2|
+
+{quote}
+This is a blockquote
+{quote}
+
+{panel:title=Panel Title}
+Panel content here
+{panel}
+
+[~username] mention
+----"></textarea>
                 </div>
 
-                <div class="editor-pane output-pane">
+                <div class="editor-pane" id="mdPane">
                     <label>
-                        <span>Markdown Output</span>
-                        <button id="copyBtn" class="copy-btn">Copy</button>
+                        <span class="label-text">
+                            <span class="active-indicator"></span>
+                            Markdown
+                        </span>
+                        <div class="button-group">
+                            <button id="clearMdBtn" class="secondary">Clear</button>
+                            <button id="copyMdBtn">Copy</button>
+                        </div>
                     </label>
-                    <textarea id="output" readonly placeholder="Markdown will appear here..."></textarea>
+                    <textarea id="mdInput" placeholder="# Heading
+**bold** and *italic*
+~~strikethrough~~ and underline
+`monospace` inline code
+
+```javascript
+const hello = 'world';
+```
+
+1. numbered list
+   1. nested item
+- bullet list
+  - nested item
+
+[link text](https://example.com)
+![description](image.png)
+
+| Header 1 | Header 2 |
+| --- | --- |
+| Cell 1 | Cell 2 |
+
+> This is a blockquote
+
+@username mention
+---"></textarea>
                 </div>
             </div>
 
@@ -325,76 +385,26 @@ public class Hello {}
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>Headings</td>
-                                <td><code>h1. Title</code> to <code>h6. Title</code></td>
-                                <td><code># Title</code> to <code>###### Title</code></td>
-                            </tr>
-                            <tr>
-                                <td>Bold</td>
-                                <td><code>*bold text*</code></td>
-                                <td><code>**bold text**</code></td>
-                            </tr>
-                            <tr>
-                                <td>Italic</td>
-                                <td><code>_italic text_</code></td>
-                                <td><code>*italic text*</code></td>
-                            </tr>
-                            <tr>
-                                <td>Strikethrough</td>
-                                <td><code>-strikethrough-</code></td>
-                                <td><code>~~strikethrough~~</code></td>
-                            </tr>
-                            <tr>
-                                <td>Monospace</td>
-                                <td><code>{{code}}</code></td>
-                                <td><code>`code`</code></td>
-                            </tr>
-                            <tr>
-                                <td>Links</td>
-                                <td><code>[text|http://url]</code></td>
-                                <td><code>[text](http://url)</code></td>
-                            </tr>
-                            <tr>
-                                <td>Images</td>
-                                <td><code>!image.png!</code></td>
-                                <td><code>![](image.png)</code></td>
-                            </tr>
-                            <tr>
-                                <td>Bullet List</td>
-                                <td><code>* item</code></td>
-                                <td><code>- item</code></td>
-                            </tr>
-                            <tr>
-                                <td>Numbered List</td>
-                                <td><code># item</code></td>
-                                <td><code>1. item</code></td>
-                            </tr>
-                            <tr>
-                                <td>Code Block</td>
-                                <td><code>{code:lang}...{code}</code></td>
-                                <td><code>```lang...```</code></td>
-                            </tr>
-                            <tr>
-                                <td>Quote</td>
-                                <td><code>{quote}...{quote}</code></td>
-                                <td><code>> ...</code></td>
-                            </tr>
-                            <tr>
-                                <td>Table Header</td>
-                                <td><code>||h1||h2||</code></td>
-                                <td><code>| h1 | h2 |</code></td>
-                            </tr>
-                            <tr>
-                                <td>Table Row</td>
-                                <td><code>|c1|c2|</code></td>
-                                <td><code>| c1 | c2 |</code></td>
-                            </tr>
-                            <tr>
-                                <td>Horizontal Rule</td>
-                                <td><code>----</code></td>
-                                <td><code>---</code></td>
-                            </tr>
+                            <tr><td>Headings</td><td><code>h1. Title</code> to <code>h6.</code></td><td><code># Title</code> to <code>######</code></td></tr>
+                            <tr><td>Bold</td><td><code>*bold*</code></td><td><code>**bold**</code></td></tr>
+                            <tr><td>Italic</td><td><code>_italic_</code></td><td><code>*italic*</code></td></tr>
+                            <tr><td>Bold+Italic</td><td><code>*_text_*</code></td><td><code>***text***</code></td></tr>
+                            <tr><td>Strikethrough</td><td><code>-text-</code></td><td><code>~~text~~</code></td></tr>
+                            <tr><td>Underline</td><td><code>+text+</code></td><td><code>&lt;ins&gt;text&lt;/ins&gt;</code></td></tr>
+                            <tr><td>Monospace</td><td><code>{{code}}</code></td><td><code>`code`</code></td></tr>
+                            <tr><td>Superscript</td><td><code>^text^</code></td><td><code>&lt;sup&gt;text&lt;/sup&gt;</code></td></tr>
+                            <tr><td>Subscript</td><td><code>~text~</code></td><td><code>&lt;sub&gt;text&lt;/sub&gt;</code></td></tr>
+                            <tr><td>Code Block</td><td><code>{code:lang}...{code}</code></td><td><code>```lang...```</code></td></tr>
+                            <tr><td>Links</td><td><code>[text|url]</code></td><td><code>[text](url)</code></td></tr>
+                            <tr><td>Images</td><td><code>!url|alt=text!</code></td><td><code>![text](url)</code></td></tr>
+                            <tr><td>Bullet List</td><td><code>* item</code></td><td><code>- item</code></td></tr>
+                            <tr><td>Numbered List</td><td><code># item</code></td><td><code>1. item</code></td></tr>
+                            <tr><td>Nested List</td><td><code>** or ##</code></td><td>2-space indent</td></tr>
+                            <tr><td>Blockquote</td><td><code>{quote}...{quote}</code></td><td><code>> text</code></td></tr>
+                            <tr><td>Table Header</td><td><code>||h1||h2||</code></td><td><code>| h1 | h2 |</code></td></tr>
+                            <tr><td>Table Row</td><td><code>|c1|c2|</code></td><td><code>| c1 | c2 |</code></td></tr>
+                            <tr><td>Horizontal Rule</td><td><code>----</code></td><td><code>---</code></td></tr>
+                            <tr><td>Mentions</td><td><code>[~username]</code></td><td><code>@username</code></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -428,47 +438,48 @@ public class Hello {}
             reference.classList.toggle('open');
         });
 
-        // ===== Jira to Markdown Conversion =====
+        // ===== Conversion Functions =====
+
         function jiraToMarkdown(jira) {
             if (!jira) return '';
-
             let text = jira;
 
-            // Preserve code blocks first (to avoid processing their contents)
+            // Preserve code blocks first
             const codeBlocks = [];
-            text = text.replace(/\{code(?::([a-zA-Z0-9_+-]+))?\}([\s\S]*?)\{code\}/g, (match, lang, code) => {
-                const index = codeBlocks.length;
+            text = text.replace(/\{code(?::([a-zA-Z0-9_+-]+))?(?:[:|](?:title|borderStyle|borderColor|bgColor|titleBGColor|titleColor)=[^}|]+)*\}([\s\S]*?)\{code\}/gi, (match, lang, code) => {
                 codeBlocks.push({ lang: lang || '', code: code });
-                return `__CODE_BLOCK_${index}__`;
+                return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
             });
 
             // Preserve noformat blocks
             const noformatBlocks = [];
-            text = text.replace(/\{noformat\}([\s\S]*?)\{noformat\}/g, (match, content) => {
-                const index = noformatBlocks.length;
+            text = text.replace(/\{noformat\}([\s\S]*?)\{noformat\}/gi, (match, content) => {
                 noformatBlocks.push(content);
-                return `__NOFORMAT_BLOCK_${index}__`;
+                return `__NOFORMAT_BLOCK_${noformatBlocks.length - 1}__`;
             });
 
-            // Headings: h1. to h6. (preserve temporarily to avoid numbered list conflict)
+            // Headings: h1. to h6.
             const headings = [];
             text = text.replace(/^h([1-6])\.\s*(.+)$/gm, (match, level, content) => {
-                const index = headings.length;
                 headings.push({ level: parseInt(level), content: content.trim() });
-                return `__HEADING_${index}__`;
+                return `__HEADING_${headings.length - 1}__`;
             });
 
-            // Bold: *text* -> **text** (but not at word boundaries within code)
-            text = text.replace(/(?<![a-zA-Z0-9])\*([^\s*](?:[^*]*[^\s*])?)\*(?![a-zA-Z0-9])/g, '**$1**');
+            // Bold+Italic combo: *_text_* -> ***text***
+            text = text.replace(/\*_([^_]+)_\*/g, '***$1***');
+            text = text.replace(/_\*([^*]+)\*_/g, '***$1***');
+
+            // Bold: *text* -> **text**
+            text = text.replace(/(?<![a-zA-Z0-9*])\*([^\s*](?:[^*]*[^\s*])?)\*(?![a-zA-Z0-9*])/g, '**$1**');
 
             // Italic: _text_ -> *text*
-            text = text.replace(/(?<![a-zA-Z0-9])_([^\s_](?:[^_]*[^\s_])?)_(?![a-zA-Z0-9])/g, '*$1*');
+            text = text.replace(/(?<![a-zA-Z0-9_])_([^\s_](?:[^_]*[^\s_])?)_(?![a-zA-Z0-9_])/g, '*$1*');
 
             // Strikethrough: -text- -> ~~text~~
-            text = text.replace(/(?<![a-zA-Z0-9-])-([^\s-](?:[^-]*[^\s-])?)-(?![a-zA-Z0-9-])/g, '~~$1~~');
+            text = text.replace(/(?<![a-zA-Z0-9-])-([^\s-][^-]*[^\s-]|[^\s-])-(?![a-zA-Z0-9-])/g, '~~$1~~');
 
-            // Inserted (underline in Jira): +text+ -> <ins>text</ins> or just text (MD doesn't have underline)
-            text = text.replace(/(?<![a-zA-Z0-9])\+([^\s+](?:[^+]*[^\s+])?)\+(?![a-zA-Z0-9])/g, '$1');
+            // Underline: +text+ -> <ins>text</ins>
+            text = text.replace(/(?<![a-zA-Z0-9+])\+([^\s+][^+]*[^\s+]|[^\s+])\+(?![a-zA-Z0-9+])/g, '<ins>$1</ins>');
 
             // Superscript: ^text^ -> <sup>text</sup>
             text = text.replace(/\^([^^]+)\^/g, '<sup>$1</sup>');
@@ -479,17 +490,18 @@ public class Hello {}
             // Monospace: {{text}} -> `text`
             text = text.replace(/\{\{([^}]+)\}\}/g, '`$1`');
 
-            // Links: [text|url] or [url] -> [text](url)
+            // Named links: [text|url] -> [text](url)
             text = text.replace(/\[([^\]|]+)\|([^\]]+)\]/g, '[$1]($2)');
-            text = text.replace(/\[([^\]]+)\]/g, (match, content) => {
-                // If it looks like a URL, make it a link
+
+            // Unnamed links: [url] -> <url> or [url](url)
+            text = text.replace(/\[([^\]|]+)\]/g, (match, content) => {
                 if (content.match(/^https?:\/\//)) {
-                    return `[${content}](${content})`;
+                    return `<${content}>`;
                 }
                 return match;
             });
 
-            // Images: !image.png! or !image.png|alt=text! -> ![alt](image.png)
+            // Images: !url! or !url|params! -> ![alt](url)
             text = text.replace(/!([^!\s|]+)(?:\|([^!]+))?!/g, (match, src, params) => {
                 let alt = '';
                 if (params) {
@@ -499,27 +511,28 @@ public class Hello {}
                 return `![${alt}](${src})`;
             });
 
-            // Bullet lists: * item, ** item (nested)
+            // Bullet lists with nesting
             text = text.replace(/^(\*+)\s+(.+)$/gm, (match, stars, content) => {
                 const indent = '  '.repeat(stars.length - 1);
                 return `${indent}- ${content}`;
             });
 
-            // Numbered lists: # item, ## item (nested)
+            // Numbered lists with nesting
             text = text.replace(/^(#+)\s+(.+)$/gm, (match, hashes, content) => {
-                // Check it's not a heading (would have . after #)
-                if (content.startsWith('.')) return match;
                 const indent = '  '.repeat(hashes.length - 1);
                 return `${indent}1. ${content}`;
             });
 
+            // Blockquote: bq. text -> > text
+            text = text.replace(/^bq\.\s*(.+)$/gm, '> $1');
+
             // Quote blocks: {quote}...{quote}
-            text = text.replace(/\{quote\}([\s\S]*?)\{quote\}/g, (match, content) => {
+            text = text.replace(/\{quote\}([\s\S]*?)\{quote\}/gi, (match, content) => {
                 return content.trim().split('\n').map(line => `> ${line}`).join('\n');
             });
 
-            // Panels: {panel:title=X}...{panel} -> blockquote with title
-            text = text.replace(/\{panel(?::title=([^}]+))?\}([\s\S]*?)\{panel\}/g, (match, title, content) => {
+            // Panels: {panel:title=X}...{panel}
+            text = text.replace(/\{panel(?::title=([^}|]+))?(?:\|[^}]*)?\}([\s\S]*?)\{panel\}/gi, (match, title, content) => {
                 const lines = content.trim().split('\n').map(line => `> ${line}`);
                 if (title) {
                     lines.unshift(`> **${title}**`, '>');
@@ -527,34 +540,39 @@ public class Hello {}
                 return lines.join('\n');
             });
 
-            // Color (strip it, MD doesn't support color)
-            text = text.replace(/\{color:[^}]+\}([\s\S]*?)\{color\}/g, '$1');
+            // Color tags: {color:red}text{color} -> text (strip colors)
+            text = text.replace(/\{color:[^}]+\}([\s\S]*?)\{color\}/gi, '$1');
 
             // Tables
-            // First find table sections and process them
-            text = text.replace(/((?:^\|.+\|$\n?)+)/gm, (tableBlock) => {
+            text = text.replace(/((?:^[\t ]*\|.+\|[\t ]*$\n?)+)/gm, (tableBlock) => {
                 const lines = tableBlock.trim().split('\n');
                 const processedLines = [];
                 let needsSeparator = false;
+                let colCount = 0;
 
                 for (const line of lines) {
+                    const trimmedLine = line.trim();
                     // Header row: ||col||col||
-                    if (line.includes('||')) {
-                        const cells = line.split('||').filter(c => c !== '');
-                        processedLines.push('| ' + cells.join(' | ') + ' |');
+                    if (trimmedLine.includes('||')) {
+                        const cells = trimmedLine.split('||').filter(c => c !== '');
+                        colCount = cells.length;
+                        processedLines.push('| ' + cells.map(c => c.trim()).join(' | ') + ' |');
                         needsSeparator = true;
                     }
                     // Regular row: |col|col|
-                    else if (line.match(/^\|[^|]/)) {
+                    else if (trimmedLine.match(/^\|[^|]/)) {
                         if (needsSeparator && processedLines.length > 0) {
-                            // Add separator after header
-                            const colCount = (processedLines[processedLines.length - 1].match(/\|/g) || []).length - 1;
                             processedLines.push('|' + ' --- |'.repeat(colCount));
                             needsSeparator = false;
                         }
-                        const cells = line.split('|').filter((c, i, arr) => i > 0 && i < arr.length - 1);
-                        processedLines.push('| ' + cells.join(' | ') + ' |');
+                        const cells = trimmedLine.split('|').filter((c, i, arr) => i > 0 && i < arr.length - 1);
+                        processedLines.push('| ' + cells.map(c => c.trim()).join(' | ') + ' |');
                     }
+                }
+
+                // If only header rows with no data, still add separator
+                if (needsSeparator && processedLines.length > 0) {
+                    processedLines.push('|' + ' --- |'.repeat(colCount));
                 }
 
                 return processedLines.join('\n');
@@ -563,76 +581,233 @@ public class Hello {}
             // Horizontal rule: ---- -> ---
             text = text.replace(/^-{4,}$/gm, '---');
 
-            // Line breaks: \\ -> <br> or two spaces
+            // Line breaks: \\ -> two trailing spaces + newline
             text = text.replace(/\\\\/g, '  \n');
 
-            // Anchor: {anchor:name} -> remove (no direct MD equivalent)
-            text = text.replace(/\{anchor:[^}]+\}/g, '');
-
-            // TOC: {toc} -> remove
-            text = text.replace(/\{toc(?::[^}]*)?\}/g, '');
+            // Anchors and TOC: remove
+            text = text.replace(/\{anchor:[^}]+\}/gi, '');
+            text = text.replace(/\{toc(?::[^}]*)?\}/gi, '');
 
             // User mentions: [~username] -> @username
             text = text.replace(/\[~([^\]]+)\]/g, '@$1');
 
             // Restore headings
-            headings.forEach((h, index) => {
-                const mdHeading = '#'.repeat(h.level) + ' ' + h.content;
-                text = text.replace(`__HEADING_${index}__`, mdHeading);
+            headings.forEach((h, i) => {
+                text = text.replace(`__HEADING_${i}__`, '#'.repeat(h.level) + ' ' + h.content);
             });
 
             // Restore code blocks
-            codeBlocks.forEach((block, index) => {
-                const mdBlock = '```' + block.lang + '\n' + block.code.trim() + '\n```';
-                text = text.replace(`__CODE_BLOCK_${index}__`, mdBlock);
+            codeBlocks.forEach((block, i) => {
+                text = text.replace(`__CODE_BLOCK_${i}__`, '```' + block.lang + '\n' + block.code.trim() + '\n```');
             });
 
             // Restore noformat blocks
-            noformatBlocks.forEach((content, index) => {
-                const mdBlock = '```\n' + content.trim() + '\n```';
-                text = text.replace(`__NOFORMAT_BLOCK_${index}__`, mdBlock);
+            noformatBlocks.forEach((content, i) => {
+                text = text.replace(`__NOFORMAT_BLOCK_${i}__`, '```\n' + content.trim() + '\n```');
             });
 
             return text;
         }
 
-        // ===== UI =====
-        const input = document.getElementById('input');
-        const output = document.getElementById('output');
-        const copyBtn = document.getElementById('copyBtn');
-        const clearBtn = document.getElementById('clearBtn');
+        function markdownToJira(md) {
+            if (!md) return '';
+            let text = md;
 
-        function convert() {
-            output.value = jiraToMarkdown(input.value);
+            // Preserve code blocks first
+            const codeBlocks = [];
+            text = text.replace(/```([a-zA-Z0-9_+-]*)\n?([\s\S]*?)```/g, (match, lang, code) => {
+                codeBlocks.push({ lang: lang || '', code: code });
+                return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+            });
+
+            // Preserve inline code
+            const inlineCodes = [];
+            text = text.replace(/`([^`]+)`/g, (match, code) => {
+                inlineCodes.push(code);
+                return `__INLINE_CODE_${inlineCodes.length - 1}__`;
+            });
+
+            // Headers: # to ###### -> h1. to h6.
+            text = text.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, content) => {
+                return `h${hashes.length}. ${content}`;
+            });
+
+            // Bold+Italic: ***text*** -> *_text_*
+            text = text.replace(/\*{3}([^*]+)\*{3}/g, '*_$1_*');
+
+            // Bold: **text** -> *text* (use placeholder to avoid italic match)
+            const boldMatches = [];
+            text = text.replace(/\*{2}([^*]+)\*{2}/g, (match, content) => {
+                boldMatches.push(content);
+                return `__BOLD_${boldMatches.length - 1}__`;
+            });
+
+            // Italic: *text* -> _text_
+            text = text.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '_$1_');
+
+            // Restore bold
+            boldMatches.forEach((content, i) => {
+                text = text.replace(`__BOLD_${i}__`, `*${content}*`);
+            });
+
+            // Strikethrough: ~~text~~ -> -text-
+            text = text.replace(/~~([^~]+)~~/g, '-$1-');
+
+            // HTML tags
+            text = text.replace(/<ins>([^<]+)<\/ins>/gi, '+$1+');
+            text = text.replace(/<sup>([^<]+)<\/sup>/gi, '^$1^');
+            text = text.replace(/<sub>([^<]+)<\/sub>/gi, '~$1~');
+
+            // Links: [text](url) -> [text|url]
+            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '[$1|$2]');
+
+            // Unnamed links: <url> -> [url]
+            text = text.replace(/<(https?:\/\/[^>]+)>/g, '[$1]');
+
+            // Images: ![alt](url) -> !url|alt=alt!
+            text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+                if (alt) {
+                    return `!${src}|alt=${alt}!`;
+                }
+                return `!${src}!`;
+            });
+
+            // Tables - detect and convert
+            text = text.replace(/((?:^\|.+\|$\n?)+)/gm, (tableBlock) => {
+                const lines = tableBlock.trim().split('\n');
+                const processedLines = [];
+                let isFirstRow = true;
+
+                for (const line of lines) {
+                    // Skip separator rows
+                    if (line.match(/^\|\s*[-:]+\s*\|/)) continue;
+
+                    const cells = line.split('|').filter((c, i, arr) => i > 0 && i < arr.length - 1);
+
+                    if (isFirstRow) {
+                        // Header row
+                        processedLines.push('||' + cells.map(c => c.trim()).join('||') + '||');
+                        isFirstRow = false;
+                    } else {
+                        // Data row
+                        processedLines.push('|' + cells.map(c => c.trim()).join('|') + '|');
+                    }
+                }
+
+                return processedLines.join('\n');
+            });
+
+            // Blockquotes: > text -> {quote}...{quote} for multiline, bq. for single
+            text = text.replace(/((?:^>.*$\n?)+)/gm, (quoteBlock) => {
+                const lines = quoteBlock.trim().split('\n').map(l => l.replace(/^>\s?/, ''));
+                if (lines.length === 1) {
+                    return `bq. ${lines[0]}`;
+                }
+                return `{quote}\n${lines.join('\n')}\n{quote}`;
+            });
+
+            // Unordered lists with nesting
+            text = text.replace(/^((?:  )*)[-*]\s+(.+)$/gm, (match, indent, content) => {
+                const level = (indent.length / 2) + 1;
+                return '*'.repeat(level) + ' ' + content;
+            });
+
+            // Ordered lists with nesting
+            text = text.replace(/^((?:  )*)\d+\.\s+(.+)$/gm, (match, indent, content) => {
+                const level = (indent.length / 2) + 1;
+                return '#'.repeat(level) + ' ' + content;
+            });
+
+            // Horizontal rule: --- -> ----
+            text = text.replace(/^-{3,}$/gm, '----');
+
+            // User mentions: @username -> [~username]
+            text = text.replace(/@([a-zA-Z0-9_.-]+)/g, '[~$1]');
+
+            // Restore inline code: `code` -> {{code}}
+            inlineCodes.forEach((code, i) => {
+                text = text.replace(`__INLINE_CODE_${i}__`, `{{${code}}}`);
+            });
+
+            // Restore code blocks
+            codeBlocks.forEach((block, i) => {
+                if (block.lang) {
+                    text = text.replace(`__CODE_BLOCK_${i}__`, `{code:${block.lang}}\n${block.code.trim()}\n{code}`);
+                } else {
+                    text = text.replace(`__CODE_BLOCK_${i}__`, `{code}\n${block.code.trim()}\n{code}`);
+                }
+            });
+
+            return text;
         }
 
-        // Real-time conversion
-        input.addEventListener('input', convert);
+        // ===== UI State =====
+        const jiraInput = document.getElementById('jiraInput');
+        const mdInput = document.getElementById('mdInput');
+        const jiraPane = document.getElementById('jiraPane');
+        const mdPane = document.getElementById('mdPane');
 
-        // Copy button
-        copyBtn.addEventListener('click', () => {
-            if (!output.value) return;
+        let isConverting = false;
+        let activePane = null;
 
-            navigator.clipboard.writeText(output.value).then(() => {
-                const original = copyBtn.textContent;
-                copyBtn.textContent = 'Copied!';
-                copyBtn.classList.add('copied');
+        function setActivePane(pane) {
+            activePane = pane;
+            jiraPane.classList.toggle('active', pane === 'jira');
+            mdPane.classList.toggle('active', pane === 'md');
+        }
+
+        jiraInput.addEventListener('input', () => {
+            if (isConverting) return;
+            setActivePane('jira');
+            isConverting = true;
+            mdInput.value = jiraToMarkdown(jiraInput.value);
+            isConverting = false;
+        });
+
+        mdInput.addEventListener('input', () => {
+            if (isConverting) return;
+            setActivePane('md');
+            isConverting = true;
+            jiraInput.value = markdownToJira(mdInput.value);
+            isConverting = false;
+        });
+
+        jiraInput.addEventListener('focus', () => setActivePane('jira'));
+        mdInput.addEventListener('focus', () => setActivePane('md'));
+
+        // Copy buttons
+        function copyWithFeedback(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const original = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
                 setTimeout(() => {
-                    copyBtn.textContent = original;
-                    copyBtn.classList.remove('copied');
+                    button.textContent = original;
+                    button.classList.remove('copied');
                 }, 2000);
             });
+        }
+
+        document.getElementById('copyJiraBtn').addEventListener('click', () => {
+            copyWithFeedback(jiraInput.value, document.getElementById('copyJiraBtn'));
         });
 
-        // Clear button
-        clearBtn.addEventListener('click', () => {
-            input.value = '';
-            output.value = '';
-            input.focus();
+        document.getElementById('copyMdBtn').addEventListener('click', () => {
+            copyWithFeedback(mdInput.value, document.getElementById('copyMdBtn'));
         });
 
-        // Convert on load if there's content (for testing)
-        convert();
+        // Clear buttons
+        document.getElementById('clearJiraBtn').addEventListener('click', () => {
+            jiraInput.value = '';
+            mdInput.value = '';
+            jiraInput.focus();
+        });
+
+        document.getElementById('clearMdBtn').addEventListener('click', () => {
+            jiraInput.value = '';
+            mdInput.value = '';
+            mdInput.focus();
+        });
     </script>
 </body>
 </html>
