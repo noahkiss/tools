@@ -343,7 +343,7 @@
                 {
                         "slug": "jiradown",
                         "title": "Jiradown",
-                        "description": "Bidirectional converter between Jira Server wiki markup and Markdown. Edit either pane and the other updates in real-time. Supports headings, bold, italic, strikethrough, underline, monospace, code blocks with language syntax (`{code:javascript}` / ` ```javascript `), nested lists, links, images, tables, blockquotes, panels, and user mentions. Based on patterns from [J2M](https://github.com/kylefarris/J2M) and the [Confluence wiki markup spec](https://support.atlassian.com/confluence-cloud/docs/insert-confluence-wiki-markup/).",
+                        "description": "Bidirectional converter between Jira Server wiki markup and Markdown. Edit either pane and the other updates in real-time.",
                         "category": "Text & Data"
                 }
         ];
@@ -376,7 +376,7 @@
                         <ul class="tool-list">
                             ${categoryTools.map(tool => `
                                 <li class="tool-item" data-title="${tool.title.toLowerCase()}" data-description="${(tool.description || '').toLowerCase()}">
-                                    <a href="${tool.slug}.html">
+                                    <a href="${tool.slug}/">
                                         <div class="tool-title">${tool.title}</div>
                                         ${tool.description ? `<p class="tool-description">${tool.description}</p>` : ''}
                                     </a>

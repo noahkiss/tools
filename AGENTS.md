@@ -75,15 +75,18 @@ When the user describes a tool idea:
 
 **Filename**: `{tool-name}/docs.md` (inside the tool folder)
 
-**Content**: 2-4 sentences describing what the tool does and how to use it. Keep it brief and practical.
+**Content**: 1-2 sentences max. Describe what the tool does at a high level. This appears on the landing page, so keep it scannable.
+
+**Avoid**:
+- Syntax examples or code snippets (e.g., `` `{code:js}` ``)
+- Listing every feature supported
+- Technical implementation details
 
 Example:
 ```markdown
 <!-- category: Text & Data -->
 
-Converts JSON to YAML format. Paste or type JSON in the input area and see the
-YAML output update in real-time. Handles nested objects, arrays, and all standard
-JSON types. Copy the result with the clipboard button.
+Bidirectional converter between Jira wiki markup and Markdown. Edit either pane and the other updates in real-time.
 ```
 
 ### Step 4: Update the Index
