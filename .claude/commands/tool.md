@@ -16,8 +16,9 @@ Follow this workflow:
    - Copy the template structure to `{tool-name}.html`
    - Modify the title, description, and tool logic
    - Use the existing CSS variables for theming (see AGENTS.md for the full list)
-   - Create `{tool-name}.docs.md` with a 2-4 sentence description
-   - Add entry to README.md under the appropriate category
+   - Create `{tool-name}.docs.md` with:
+     - Category comment: `<!-- category: Text & Data -->` (or Image & Media, Development, Utilities)
+     - 2-4 sentence description of what the tool does
 
 3. **Test locally**
    - Start a local server: `python -m http.server 8000`
@@ -26,8 +27,9 @@ Follow this workflow:
    - Test on mobile viewport (375px width)
    - Use Playwright MCP tools if available for automated verification
 
-4. **Commit and Push**
-   - Stage the new files: `git add {tool-name}.html {tool-name}.docs.md README.md`
+4. **Build and Commit**
+   - Run `python build.py` to update the search index
+   - Stage all files: `git add {tool-name}.html {tool-name}.docs.md tools.json index.html`
    - Commit with message: `Add {tool-name} tool` (include `Co-Authored-By: Claude <noreply@anthropic.com>`)
    - Push to remote: `git push`
 

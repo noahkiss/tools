@@ -500,3 +500,52 @@ git commit -m "Add {tool-name} tool
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
+
+---
+
+## Footer
+
+The template includes `<script src="footer.js"></script>` which auto-injects a consistent footer with:
+- Home link
+- View Source (links to the file on GitHub)
+- History (links to commit history)
+
+The footer.js script automatically detects the current theme and styles itself accordingly using CSS variables.
+
+**Note**: The footer is not added to index.html (the homepage has its own footer).
+
+---
+
+## Build Process
+
+Run `python build.py` to:
+1. Scan all `.html` files (excluding `index.html` and `_template.html`)
+2. Extract titles from `<title>` tags
+3. Extract descriptions from `.docs.md` files
+4. Generate `tools.json` with tool metadata
+5. Update `index.html` with the tools data for search
+
+The build script should be run after adding new tools to update the search index:
+
+```bash
+python build.py
+git add tools.json index.html
+git commit -m "Rebuild tools index"
+git push
+```
+
+### Category Support
+
+To assign a tool to a specific category, add a comment to the `.docs.md` file:
+
+```markdown
+<!-- category: Text & Data -->
+
+This tool converts JSON to YAML format...
+```
+
+Available categories:
+- **Text & Data** - formatters, converters, parsers
+- **Image & Media** - image manipulation, media utilities
+- **Development** - code helpers, debugging tools
+- **Utilities** - calculators, generators, misc (default)
