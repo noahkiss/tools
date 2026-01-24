@@ -405,6 +405,7 @@ const hello = 'world';
                             <tr><td>Table Row</td><td><code>|c1|c2|</code></td><td><code>| c1 | c2 |</code></td></tr>
                             <tr><td>Horizontal Rule</td><td><code>----</code></td><td><code>---</code></td></tr>
                             <tr><td>Mentions</td><td><code>[~username]</code></td><td><code>@username</code></td></tr>
+                            <tr><td>Escaped Braces</td><td><code>\{</code> <code>\}</code></td><td><code>{</code> <code>}</code></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -605,6 +606,9 @@ const hello = 'world';
             noformatBlocks.forEach((content, i) => {
                 text = text.replace(`__NOFORMAT_BLOCK_${i}__`, '```\n' + content.trim() + '\n```');
             });
+
+            // Unescape curly braces (Jira uses \{ and \} for literals, Markdown doesn't need escaping)
+            text = text.replace(/\\([{}])/g, '$1');
 
             return text;
         }
