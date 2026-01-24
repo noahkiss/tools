@@ -4,12 +4,16 @@ Create a new tool for this repository.
 
 Follow this workflow:
 
-1. **Clarify the idea** (1-2 questions max)
-   - What's the core use case? (if not clear from the description)
-   - What are the inputs and outputs?
-   - Any specific libraries needed, or should this be pure vanilla JS?
+1. **Always ask 2-3 clarifying questions first** (use AskUserQuestion tool)
 
-   Skip questions if the idea is already clear enough to build.
+   Even if the idea seems clear, ask questions to uncover hidden requirements:
+   - **Directionality**: Is this one-way or bidirectional? (e.g., "Jira to Markdown" vs "Jira ↔ Markdown")
+   - **Edge cases**: Are there known quirks or variations to handle? Does the user have a spec/reference doc?
+   - **Scope**: What features are must-have vs nice-to-have? Any features to explicitly exclude?
+   - **Input/Output**: What formats? File upload, paste, URL input? Download, copy, preview?
+   - **Libraries**: Any specific libraries to use or avoid? Pure vanilla JS preferred?
+
+   Ask 2-3 of the most relevant questions for this specific tool idea. Don't skip this step.
 
 2. **Build the tool**
    - Read `_templates/base.html` as your base
