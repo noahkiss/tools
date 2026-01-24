@@ -166,9 +166,95 @@ turndownService.addRule('preserveLinks', {
 ```
 
 ### State Persistence
-- **URL hash**: For shareable state (e.g., `#config=base64data`)
-- **localStorage**: For user preferences and sensitive data like API keys
-- **No server-side storage**: These are client-only tools
+
+Tools can be **stateless** (no persistence) or **stateful** (remember settings/data).
+
+**URL Parameters** - Best for shareable state:
+```javascript
+// Save state to URL (shareable link)
+function saveToUrl(state) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(state)) {
+        params.set(key, typeof value === 'object' ? JSON.stringify(value) : value);
+    }
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    history.replaceState(null, '', newUrl);
+}
+
+// Load state from URL
+function loadFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return Object.fromEntries(params.entries());
+}
+
+// Example: ?theme=dark&columns=3&filter=active
+```
+
+**URL Hash** - For large state or cleaner URLs:
+```javascript
+// Save state to hash (base64 encoded)
+function saveToHash(state) {
+    const json = JSON.stringify(state);
+    const encoded = btoa(encodeURIComponent(json));
+    window.location.hash = encoded;
+}
+
+// Load state from hash
+function loadFromHash() {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return null;
+    try {
+        return JSON.parse(decodeURIComponent(atob(hash)));
+    } catch {
+        return null;
+    }
+}
+
+// Example: #eyJ0aGVtZSI6ImRhcmsifQ==
+```
+
+**localStorage** - For persistent user preferences (not shareable):
+```javascript
+const STORAGE_KEY = 'tool-name-settings';
+
+function saveToStorage(state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadFromStorage() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : null;
+}
+
+// Good for: API keys, theme preference, default settings
+// Bad for: Data you want to share via URL
+```
+
+**Combined Pattern** - URL params override localStorage:
+```javascript
+function loadState() {
+    const defaults = { theme: 'light', pageSize: 10 };
+    const stored = loadFromStorage() || {};
+    const urlParams = loadFromUrl();
+
+    // URL params take priority (for sharing)
+    return { ...defaults, ...stored, ...urlParams };
+}
+
+function saveState(state, { toUrl = false } = {}) {
+    saveToStorage(state);
+    if (toUrl) saveToUrl(state);
+}
+```
+
+**When to use which:**
+| Scenario | Method |
+|----------|--------|
+| Share exact tool state | URL params |
+| Large/complex state | URL hash (base64) |
+| User preferences | localStorage |
+| API keys, secrets | localStorage only |
+| One-time view | No persistence |
 
 ---
 
