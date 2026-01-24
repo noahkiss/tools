@@ -2,6 +2,18 @@
 
 This repository contains single-file HTML tools hosted via GitHub Pages. Each tool is a self-contained, dependency-minimal web application that can be built entirely by an LLM in a single session.
 
+> **Meta-Instruction**: This file should be self-updating. When you make structural changes to the repository, add new patterns, or establish new conventions, update this file to reflect those changes. Future Claude instances should always have accurate, up-to-date instructions.
+
+> **Commit Policy**: Always commit and push after completing atomic units of work. Don't leave uncommitted changes. If you've made a meaningful change, commit it.
+
+## Quick Start
+
+Use the **`/tool` slash command** to create new tools. It handles the full workflow: clarifying requirements, building, testing, and committing.
+
+```
+/tool json to yaml converter
+```
+
 ## Core Philosophy
 
 **Single-file simplicity**: Every tool is one HTML file with inline CSS and JavaScript. No build step, no bundlers, no frameworks. This makes tools trivially easy to create, host, copy, and maintain.
@@ -22,9 +34,21 @@ When the user describes a tool idea:
 3. Determine if external libraries are needed
 4. Consider edge cases and error states
 
-### Step 2: Create the HTML File
+### Step 2: Create the Tool Folder
 
-**Filename**: `{tool-name}.html` using kebab-case (e.g., `json-formatter.html`, `color-picker.html`)
+**Structure**: Each tool lives in its own folder with an `index.html`:
+
+```
+{tool-name}/
+├── index.html     # The tool itself
+└── docs.md        # Documentation (2-4 sentences)
+```
+
+**Naming**: Use kebab-case for folder names (e.g., `json-formatter/`, `color-picker/`)
+
+**URLs**: This gives clean URLs without `.html` extension:
+- `https://noahkiss.github.io/tools/json-formatter/`
+- `https://noahkiss.github.io/tools/color-picker/`
 
 **Required structure**:
 ```html
@@ -49,12 +73,14 @@ When the user describes a tool idea:
 
 ### Step 3: Create Documentation
 
-**Filename**: `{tool-name}.docs.md`
+**Filename**: `{tool-name}/docs.md` (inside the tool folder)
 
 **Content**: 2-4 sentences describing what the tool does and how to use it. Keep it brief and practical.
 
 Example:
 ```markdown
+<!-- category: Text & Data -->
+
 Converts JSON to YAML format. Paste or type JSON in the input area and see the
 YAML output update in real-time. Handles nested objects, arrays, and all standard
 JSON types. Copy the result with the clipboard button.
@@ -92,7 +118,8 @@ When a library is genuinely helpful, load it from a CDN:
 ```
 
 **Common useful libraries**:
-- `marked` - Markdown parsing
+- `turndown` - HTML to Markdown conversion (use this frequently)
+- `marked` - Markdown to HTML parsing
 - `tesseract.js` - OCR in browser
 - `pdfjs-dist` - PDF rendering
 - `sqlite-wasm` - SQLite in browser
@@ -100,10 +127,209 @@ When a library is genuinely helpful, load it from a CDN:
 - `codemirror` - Code editor
 - `prismjs` - Syntax highlighting
 
+### Turndown (HTML → Markdown)
+
+Turndown is used frequently for tools that convert web content to Markdown:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/turndown@7.1.2/dist/turndown.min.js"></script>
+<script>
+const turndownService = new TurndownService({
+    headingStyle: 'atx',
+    codeBlockStyle: 'fenced'
+});
+
+// Optional: Add GFM plugin for tables, strikethrough, etc.
+// <script src="https://cdn.jsdelivr.net/npm/turndown-plugin-gfm@1.0.2/dist/turndown-plugin-gfm.min.js"></script>
+// turndownService.use(turndownPluginGfm.gfm);
+
+const markdown = turndownService.turndown(htmlString);
+</script>
+```
+
+Common Turndown customizations:
+```javascript
+// Keep certain elements as-is
+turndownService.keep(['iframe', 'video']);
+
+// Remove unwanted elements
+turndownService.remove(['script', 'style', 'nav', 'footer']);
+
+// Custom rules
+turndownService.addRule('preserveLinks', {
+    filter: 'a',
+    replacement: (content, node) => {
+        const href = node.getAttribute('href');
+        return href ? `[${content}](${href})` : content;
+    }
+});
+```
+
 ### State Persistence
 - **URL hash**: For shareable state (e.g., `#config=base64data`)
 - **localStorage**: For user preferences and sensitive data like API keys
 - **No server-side storage**: These are client-only tools
+
+---
+
+## Common Functionality Patterns
+
+### URL Input via Hash
+
+For tools that accept a URL as input (like HTML-to-Markdown converters), use the hash pattern:
+
+```
+https://noahkiss.github.io/tools/html-to-markdown/#https://example.com
+```
+
+```javascript
+// Read URL from hash
+function getInputUrl() {
+    const hash = window.location.hash.slice(1); // Remove the #
+    if (hash) {
+        return decodeURIComponent(hash);
+    }
+    return null;
+}
+
+// Update hash when user enters a URL
+function setInputUrl(url) {
+    window.location.hash = encodeURIComponent(url);
+}
+
+// React to hash changes (back/forward navigation)
+window.addEventListener('hashchange', () => {
+    const url = getInputUrl();
+    if (url) processUrl(url);
+});
+
+// Process on page load if hash exists
+const initialUrl = getInputUrl();
+if (initialUrl) processUrl(initialUrl);
+```
+
+### CORS Proxy for Fetching External Pages
+
+Browsers block cross-origin requests. Use a CORS proxy to fetch external HTML/content.
+
+**Preferred**: Our own Cloudflare Worker proxy (only accepts requests from our domain):
+```javascript
+const PROXY_URL = 'https://api.noahkiss.dev/proxy?url=';
+// TODO: Set up tools-api Worker with /proxy endpoint
+```
+
+**Fallback** (for development/prototyping):
+```javascript
+// Public CORS proxies (less reliable, may have rate limits)
+const CORS_PROXIES = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url='
+];
+
+async function fetchWithCorsProxy(url) {
+    for (const proxy of CORS_PROXIES) {
+        try {
+            const response = await fetch(proxy + encodeURIComponent(url));
+            if (response.ok) {
+                return await response.text();
+            }
+        } catch (e) {
+            continue; // Try next proxy
+        }
+    }
+    throw new Error('Failed to fetch URL through all proxies');
+}
+```
+
+### Clipboard Operations
+
+```javascript
+// Read from clipboard
+async function readClipboard() {
+    try {
+        return await navigator.clipboard.readText();
+    } catch (err) {
+        console.error('Clipboard read failed:', err);
+        return null;
+    }
+}
+
+// Write to clipboard with feedback
+function copyToClipboard(text, button) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+            button.textContent = originalText;
+        }, 2000);
+    });
+}
+```
+
+### Query Parameters (Alternative to Hash)
+
+For tools that need multiple URL parameters:
+
+```javascript
+// Read query params
+const params = new URLSearchParams(window.location.search);
+const url = params.get('url');
+const format = params.get('format') || 'default';
+
+// Build URL with params
+function buildShareUrl(options) {
+    const params = new URLSearchParams(options);
+    return `${window.location.pathname}?${params.toString()}`;
+}
+```
+
+### Download Generated Files
+
+```javascript
+function downloadFile(content, filename, mimeType = 'text/plain') {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Examples
+downloadFile(jsonString, 'data.json', 'application/json');
+downloadFile(markdownText, 'document.md', 'text/markdown');
+```
+
+### Share API (Mobile-Friendly)
+
+```javascript
+async function shareContent(data) {
+    if (navigator.share) {
+        try {
+            await navigator.share(data);
+            return true;
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                console.error('Share failed:', err);
+            }
+        }
+    }
+    // Fallback: copy to clipboard
+    if (data.url) {
+        await navigator.clipboard.writeText(data.url);
+        return true;
+    }
+    return false;
+}
+
+// Usage
+shareContent({
+    title: 'Check out this tool',
+    text: 'A useful web tool',
+    url: window.location.href
+});
+```
 
 ---
 
@@ -357,7 +583,7 @@ Start a local server in the repo directory:
 python -m http.server 8000
 ```
 
-Then open `http://localhost:8000/tool-name.html` in a browser.
+Then open `http://localhost:8000/tool-name/` in a browser (note the trailing slash).
 
 ---
 
@@ -387,14 +613,18 @@ Before considering a tool complete:
 
 ---
 
-## Template
+## Templates
 
-The base template lives at **`_template.html`**. Copy it to create new tools.
+Templates live in the **`_templates/`** folder:
 
-To preview the template locally:
+| Template | Purpose |
+|----------|---------|
+| `base.html` | Standard tool template with theming |
+
+To preview a template locally:
 ```bash
 python -m http.server 8000
-# Open http://localhost:8000/_template.html
+# Open http://localhost:8000/_templates/base.html
 ```
 
 ### Template Structure
@@ -478,7 +708,7 @@ Use these formats, always including the tool name:
 After completing work on a tool:
 
 ```bash
-git add {tool-name}.html {tool-name}.docs.md README.md
+git add {tool-name}/index.html {tool-name}/docs.md README.md
 git commit -m "Add {tool-name} tool"
 git push
 ```
@@ -519,9 +749,9 @@ The footer.js script automatically detects the current theme and styles itself a
 ## Build Process
 
 Run `python build.py` to:
-1. Scan all `.html` files (excluding `index.html` and `_template.html`)
+1. Scan all tool folders (directories containing `index.html`)
 2. Extract titles from `<title>` tags
-3. Extract descriptions from `.docs.md` files
+3. Extract descriptions from `docs.md` files
 4. Generate `tools.json` with tool metadata
 5. Update `index.html` with the tools data for search
 
@@ -536,7 +766,7 @@ git push
 
 ### Category Support
 
-To assign a tool to a specific category, add a comment to the `.docs.md` file:
+To assign a tool to a specific category, add a comment to the `docs.md` file:
 
 ```markdown
 <!-- category: Text & Data -->
@@ -549,3 +779,150 @@ Available categories:
 - **Image & Media** - image manipulation, media utilities
 - **Development** - code helpers, debugging tools
 - **Utilities** - calculators, generators, misc (default)
+
+---
+
+## Cloudflare Workers (Backend APIs)
+
+Some tools need server-side logic that can't run in the browser:
+- API keys that must stay secret
+- Server-to-server requests (bypassing CORS)
+- Data processing that's too heavy for client
+- Persistent storage beyond localStorage
+
+For these cases, use **Cloudflare Workers**. Workers live in a separate repo but integrate with tools here.
+
+### Worker Repository Structure
+
+Workers live in a separate repository (e.g., `tools-api` or similar):
+
+```
+tools-api/
+├── wrangler.toml           # Cloudflare config
+├── src/
+│   └── index.ts            # Worker entry point
+└── README.md
+```
+
+### Basic Worker Template
+
+```typescript
+// src/index.ts
+export interface Env {
+    // Secrets configured in Cloudflare dashboard
+    API_KEY: string;
+}
+
+export default {
+    async fetch(request: Request, env: Env): Promise<Response> {
+        const url = new URL(request.url);
+
+        // CORS headers for tools to call this API
+        const corsHeaders = {
+            'Access-Control-Allow-Origin': 'https://noahkiss.github.io',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+        };
+
+        // Handle preflight
+        if (request.method === 'OPTIONS') {
+            return new Response(null, { headers: corsHeaders });
+        }
+
+        // Route handling
+        if (url.pathname === '/api/convert') {
+            const result = await handleConvert(request, env);
+            return new Response(JSON.stringify(result), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+        }
+
+        return new Response('Not found', { status: 404, headers: corsHeaders });
+    }
+};
+```
+
+### wrangler.toml
+
+```toml
+name = "tools-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# For production
+# [env.production]
+# routes = [{ pattern = "api.noahkiss.dev/*", zone_name = "noahkiss.dev" }]
+```
+
+### Calling Workers from Tools
+
+```javascript
+const API_BASE = 'https://tools-api.youraccount.workers.dev';
+// Or custom domain: 'https://api.noahkiss.dev'
+
+async function callWorker(endpoint, data) {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+    }
+
+    return response.json();
+}
+
+// Usage
+const result = await callWorker('/api/convert', { url: 'https://example.com' });
+```
+
+### Common Worker Use Cases
+
+| Use Case | Why Worker Needed |
+|----------|-------------------|
+| Fetch URLs server-side | Bypass CORS without public proxy |
+| API integrations | Keep API keys secret |
+| PDF generation | Heavy processing, needs server libs |
+| Database storage | Persistent data with D1 or KV |
+| Rate limiting | Protect downstream APIs |
+| Authentication | Secure token validation |
+
+### Deployment
+
+```bash
+# Install wrangler
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+
+# Deploy
+wrangler deploy
+
+# Set secrets
+wrangler secret put API_KEY
+```
+
+### When to Use Workers vs CORS Proxy
+
+| Scenario | Solution |
+|----------|----------|
+| Fetch public HTML | CORS proxy (`corsproxy.io`) |
+| Fetch with API key | Worker |
+| Simple GET requests | CORS proxy |
+| POST with auth | Worker |
+| Need caching control | Worker |
+| Quick prototype | CORS proxy |
+| Production tool | Worker |
+
+### Future: Analytics via Worker
+
+For privacy-respecting analytics, we can use a Worker endpoint that:
+- Serves the favicon and logs the request (gives site-wide view count)
+- Or receives a beacon/pixel request from tools (per-tool views)
+- Stores counts in Cloudflare KV or D1
+- No cookies, no personal data, just simple counts
+
+Alternative: Use a lightweight privacy-focused analytics service like Plausible, Fathom, or GoatCounter.

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
 Build script for Noah's Tools
-Generates tools.json from HTML files and their .docs.md descriptions.
+Generates tools.json from HTML files and their docs.md descriptions.
+
+Supports both folder structure (preferred) and legacy flat files:
+- Folder: {tool-name}/index.html with {tool-name}/docs.md
+- Legacy: {tool-name}.html with {tool-name}.docs.md
 
 Usage:
     python build.py
@@ -28,7 +32,7 @@ def extract_title(html_path: Path) -> str:
 
 
 def extract_description(docs_path: Path) -> str:
-    """Extract the first paragraph from a .docs.md file."""
+    """Extract the first paragraph from a docs.md file."""
     if not docs_path.exists():
         return ""
 
@@ -54,7 +58,7 @@ def extract_description(docs_path: Path) -> str:
 
 
 def extract_category(docs_path: Path) -> str:
-    """Extract category from .docs.md front matter or default to 'Utilities'."""
+    """Extract category from docs.md front matter or default to 'Utilities'."""
     if not docs_path.exists():
         return "Utilities"
 
@@ -70,22 +74,55 @@ def extract_category(docs_path: Path) -> str:
     return "Utilities"
 
 
-def main():
-    tools_dir = Path(__file__).parent
-    html_files = sorted(tools_dir.glob("*.html"))
-
-    # Files to exclude
-    exclude = {"index.html", "_template.html"}
-
+def find_tools(tools_dir: Path) -> list:
+    """Find all tools in both folder and legacy flat file formats."""
     tools = []
+    seen_slugs = set()
 
-    for html_file in html_files:
-        if html_file.name in exclude:
+    # Directories/files to exclude
+    exclude_dirs = {".git", ".claude", "node_modules", "__pycache__", "assets"}
+    exclude_files = {"index.html", "_template.html"}
+
+    # First, find folder-based tools: {tool-name}/index.html
+    for subdir in sorted(tools_dir.iterdir()):
+        if not subdir.is_dir():
+            continue
+        if subdir.name.startswith((".", "_")):
+            continue
+        if subdir.name in exclude_dirs:
+            continue
+
+        index_html = subdir / "index.html"
+        if not index_html.exists():
+            continue
+
+        slug = subdir.name
+        docs_path = subdir / "docs.md"
+
+        tool = {
+            "slug": slug,
+            "title": extract_title(index_html),
+            "description": extract_description(docs_path),
+            "category": extract_category(docs_path),
+        }
+
+        tools.append(tool)
+        seen_slugs.add(slug)
+        print(f"  Found (folder): {tool['title']}")
+
+    # Then, find legacy flat file tools: {tool-name}.html
+    for html_file in sorted(tools_dir.glob("*.html")):
+        if html_file.name in exclude_files:
             continue
         if html_file.name.startswith("_"):
             continue
 
         slug = html_file.stem
+
+        # Skip if we already found this as a folder-based tool
+        if slug in seen_slugs:
+            continue
+
         docs_path = html_file.with_suffix(".docs.md")
 
         tool = {
@@ -96,7 +133,15 @@ def main():
         }
 
         tools.append(tool)
-        print(f"  Found: {tool['title']}")
+        print(f"  Found (legacy): {tool['title']}")
+
+    return tools
+
+
+def main():
+    tools_dir = Path(__file__).parent
+
+    tools = find_tools(tools_dir)
 
     # Sort by title
     tools.sort(key=lambda t: t["title"].lower())
