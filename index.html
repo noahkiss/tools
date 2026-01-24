@@ -339,7 +339,14 @@
 
         // ===== Tools Data =====
         // This will be populated by the build script or manually
-        const tools = [];
+        const tools = [
+                {
+                        "slug": "jira-to-markdown",
+                        "title": "Jira to Markdown",
+                        "description": "Converts Jira Server wiki markup to standard Markdown format. Supports headings, bold, italic, strikethrough, code blocks, lists (bullet and numbered with nesting), links, images, tables, blockquotes, and panels. Conversion happens in real-time as you type.",
+                        "category": "Text & Data"
+                }
+        ];
 
         // ===== Render Tools =====
         function renderTools() {

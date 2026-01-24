@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jira to Markdown - Noah's Tools</title>
+    <style>
+        /* ===== Theme Variables ===== */
+        :root {
+            --color-bg: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-text: #1a1a2e;
+            --color-text-muted: #6c757d;
+            --color-border: #dee2e6;
+            --color-primary: #4a90e2;
+            --color-primary-hover: #357abd;
+            --color-error: #dc3545;
+            --color-error-bg: #f8d7da;
+            --color-success: #28a745;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] {
+            --color-bg: #1a1a2e;
+            --color-surface: #252542;
+            --color-text: #e8e8e8;
+            --color-text-muted: #a0a0a0;
+            --color-border: #3d3d5c;
+            --color-primary: #5c9ce6;
+            --color-primary-hover: #7ab3f0;
+            --color-error: #f87171;
+            --color-error-bg: #3d2a2a;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== Base Styles ===== */
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                         Helvetica, Arial, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ===== Layout ===== */
+        .site-header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .site-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        .site-logo img {
+            height: 32px;
+            width: auto;
+        }
+
+        /* Theme-aware logo switching */
+        .logo-dark { display: none; }
+        .logo-light { display: block; }
+
+        [data-theme="dark"] .logo-dark { display: block; }
+        [data-theme="dark"] .logo-light { display: none; }
+
+        .theme-toggle {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--color-bg);
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .tool-container {
+            background: var(--color-surface);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+        }
+
+        .tool-description {
+            color: var(--color-text-muted);
+            margin: 0 0 24px 0;
+        }
+
+        /* ===== Side by Side Layout ===== */
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .editor-pane {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-pane label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .editor-pane textarea {
+            width: 100%;
+            height: 400px;
+            padding: 12px;
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        .editor-pane textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        .output-pane textarea {
+            background: var(--color-surface);
+            border-style: dashed;
+        }
+
+        /* ===== Buttons ===== */
+        button {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--color-primary-hover);
+        }
+
+        button.secondary {
+            background: var(--color-border);
+            color: var(--color-text);
+        }
+
+        button.secondary:hover {
+            background: var(--color-text-muted);
+            color: white;
+        }
+
+        .copy-btn.copied {
+            background: var(--color-success);
+        }
+
+        /* ===== Reference Section ===== */
+        .reference {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .reference h2 {
+            font-size: 16px;
+            margin: 0 0 12px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reference h2::before {
+            content: '▶';
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .reference.open h2::before {
+            transform: rotate(90deg);
+        }
+
+        .reference-content {
+            display: none;
+            overflow-x: auto;
+        }
+
+        .reference.open .reference-content {
+            display: block;
+        }
+
+        .reference table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .reference th, .reference td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .reference th {
+            background: var(--color-bg);
+            font-weight: 600;
+        }
+
+        .reference code {
+            background: var(--color-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            main { padding: 16px 12px; }
+            .tool-container { padding: 16px; }
+            h1 { font-size: 20px; }
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+            .editor-pane textarea {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <a href="/" class="site-logo">
+            <img src="../assets/logo-black-64.png" alt="" class="logo-light">
+            <img src="../assets/logo-white-64.png" alt="" class="logo-dark">
+            <span>Noah's Tools</span>
+        </a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+            🌙
+        </button>
+    </header>
+
+    <main>
+        <article class="tool-container">
+            <h1>Jira to Markdown</h1>
+            <p class="tool-description">Convert Jira Server wiki markup to standard Markdown. Paste Jira markup on the left and see Markdown output on the right.</p>
+
+            <div class="editor-container">
+                <div class="editor-pane input-pane">
+                    <label>
+                        <span>Jira Markup</span>
+                        <button id="clearBtn" class="secondary">Clear</button>
+                    </label>
+                    <textarea id="input" placeholder="Paste Jira markup here...
+
+Example:
+h1. Heading
+*bold* and _italic_
+{code:java}
+public class Hello {}
+{code}
+# numbered list
+* bullet list
+[link text|http://example.com]
+||header||header||
+|cell|cell|"></textarea>
+                </div>
+
+                <div class="editor-pane output-pane">
+                    <label>
+                        <span>Markdown Output</span>
+                        <button id="copyBtn" class="copy-btn">Copy</button>
+                    </label>
+                    <textarea id="output" readonly placeholder="Markdown will appear here..."></textarea>
+                </div>
+            </div>
+
+            <section class="reference" id="reference">
+                <h2>Syntax Reference</h2>
+                <div class="reference-content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Jira</th>
+                                <th>Markdown</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Headings</td>
+                                <td><code>h1. Title</code> to <code>h6. Title</code></td>
+                                <td><code># Title</code> to <code>###### Title</code></td>
+                            </tr>
+                            <tr>
+                                <td>Bold</td>
+                                <td><code>*bold text*</code></td>
+                                <td><code>**bold text**</code></td>
+                            </tr>
+                            <tr>
+                                <td>Italic</td>
+                                <td><code>_italic text_</code></td>
+                                <td><code>*italic text*</code></td>
+                            </tr>
+                            <tr>
+                                <td>Strikethrough</td>
+                                <td><code>-strikethrough-</code></td>
+                                <td><code>~~strikethrough~~</code></td>
+                            </tr>
+                            <tr>
+                                <td>Monospace</td>
+                                <td><code>{{code}}</code></td>
+                                <td><code>`code`</code></td>
+                            </tr>
+                            <tr>
+                                <td>Links</td>
+                                <td><code>[text|http://url]</code></td>
+                                <td><code>[text](http://url)</code></td>
+                            </tr>
+                            <tr>
+                                <td>Images</td>
+                                <td><code>!image.png!</code></td>
+                                <td><code>![](image.png)</code></td>
+                            </tr>
+                            <tr>
+                                <td>Bullet List</td>
+                                <td><code>* item</code></td>
+                                <td><code>- item</code></td>
+                            </tr>
+                            <tr>
+                                <td>Numbered List</td>
+                                <td><code># item</code></td>
+                                <td><code>1. item</code></td>
+                            </tr>
+                            <tr>
+                                <td>Code Block</td>
+                                <td><code>{code:lang}...{code}</code></td>
+                                <td><code>```lang...```</code></td>
+                            </tr>
+                            <tr>
+                                <td>Quote</td>
+                                <td><code>{quote}...{quote}</code></td>
+                                <td><code>> ...</code></td>
+                            </tr>
+                            <tr>
+                                <td>Table Header</td>
+                                <td><code>||h1||h2||</code></td>
+                                <td><code>| h1 | h2 |</code></td>
+                            </tr>
+                            <tr>
+                                <td>Table Row</td>
+                                <td><code>|c1|c2|</code></td>
+                                <td><code>| c1 | c2 |</code></td>
+                            </tr>
+                            <tr>
+                                <td>Horizontal Rule</td>
+                                <td><code>----</code></td>
+                                <td><code>---</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </article>
+    </main>
+
+    <script src="../footer.js"></script>
+    <script>
+        // ===== Theme Toggle =====
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemDark ? 'dark' : 'light');
+        html.setAttribute('data-theme', initialTheme);
+        themeToggle.textContent = initialTheme === 'dark' ? '☀️' : '🌙';
+
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+
+        // ===== Reference Toggle =====
+        const reference = document.getElementById('reference');
+        reference.querySelector('h2').addEventListener('click', () => {
+            reference.classList.toggle('open');
+        });
+
+        // ===== Jira to Markdown Conversion =====
+        function jiraToMarkdown(jira) {
+            if (!jira) return '';
+
+            let text = jira;
+
+            // Preserve code blocks first (to avoid processing their contents)
+            const codeBlocks = [];
+            text = text.replace(/\{code(?::([a-zA-Z0-9_+-]+))?\}([\s\S]*?)\{code\}/g, (match, lang, code) => {
+                const index = codeBlocks.length;
+                codeBlocks.push({ lang: lang || '', code: code });
+                return `__CODE_BLOCK_${index}__`;
+            });
+
+            // Preserve noformat blocks
+            const noformatBlocks = [];
+            text = text.replace(/\{noformat\}([\s\S]*?)\{noformat\}/g, (match, content) => {
+                const index = noformatBlocks.length;
+                noformatBlocks.push(content);
+                return `__NOFORMAT_BLOCK_${index}__`;
+            });
+
+            // Headings: h1. to h6. (preserve temporarily to avoid numbered list conflict)
+            const headings = [];
+            text = text.replace(/^h([1-6])\.\s*(.+)$/gm, (match, level, content) => {
+                const index = headings.length;
+                headings.push({ level: parseInt(level), content: content.trim() });
+                return `__HEADING_${index}__`;
+            });
+
+            // Bold: *text* -> **text** (but not at word boundaries within code)
+            text = text.replace(/(?<![a-zA-Z0-9])\*([^\s*](?:[^*]*[^\s*])?)\*(?![a-zA-Z0-9])/g, '**$1**');
+
+            // Italic: _text_ -> *text*
+            text = text.replace(/(?<![a-zA-Z0-9])_([^\s_](?:[^_]*[^\s_])?)_(?![a-zA-Z0-9])/g, '*$1*');
+
+            // Strikethrough: -text- -> ~~text~~
+            text = text.replace(/(?<![a-zA-Z0-9-])-([^\s-](?:[^-]*[^\s-])?)-(?![a-zA-Z0-9-])/g, '~~$1~~');
+
+            // Inserted (underline in Jira): +text+ -> <ins>text</ins> or just text (MD doesn't have underline)
+            text = text.replace(/(?<![a-zA-Z0-9])\+([^\s+](?:[^+]*[^\s+])?)\+(?![a-zA-Z0-9])/g, '$1');
+
+            // Superscript: ^text^ -> <sup>text</sup>
+            text = text.replace(/\^([^^]+)\^/g, '<sup>$1</sup>');
+
+            // Subscript: ~text~ -> <sub>text</sub>
+            text = text.replace(/(?<!~)~([^~]+)~(?!~)/g, '<sub>$1</sub>');
+
+            // Monospace: {{text}} -> `text`
+            text = text.replace(/\{\{([^}]+)\}\}/g, '`$1`');
+
+            // Links: [text|url] or [url] -> [text](url)
+            text = text.replace(/\[([^\]|]+)\|([^\]]+)\]/g, '[$1]($2)');
+            text = text.replace(/\[([^\]]+)\]/g, (match, content) => {
+                // If it looks like a URL, make it a link
+                if (content.match(/^https?:\/\//)) {
+                    return `[${content}](${content})`;
+                }
+                return match;
+            });
+
+            // Images: !image.png! or !image.png|alt=text! -> ![alt](image.png)
+            text = text.replace(/!([^!\s|]+)(?:\|([^!]+))?!/g, (match, src, params) => {
+                let alt = '';
+                if (params) {
+                    const altMatch = params.match(/alt=([^,|]+)/);
+                    if (altMatch) alt = altMatch[1];
+                }
+                return `![${alt}](${src})`;
+            });
+
+            // Bullet lists: * item, ** item (nested)
+            text = text.replace(/^(\*+)\s+(.+)$/gm, (match, stars, content) => {
+                const indent = '  '.repeat(stars.length - 1);
+                return `${indent}- ${content}`;
+            });
+
+            // Numbered lists: # item, ## item (nested)
+            text = text.replace(/^(#+)\s+(.+)$/gm, (match, hashes, content) => {
+                // Check it's not a heading (would have . after #)
+                if (content.startsWith('.')) return match;
+                const indent = '  '.repeat(hashes.length - 1);
+                return `${indent}1. ${content}`;
+            });
+
+            // Quote blocks: {quote}...{quote}
+            text = text.replace(/\{quote\}([\s\S]*?)\{quote\}/g, (match, content) => {
+                return content.trim().split('\n').map(line => `> ${line}`).join('\n');
+            });
+
+            // Panels: {panel:title=X}...{panel} -> blockquote with title
+            text = text.replace(/\{panel(?::title=([^}]+))?\}([\s\S]*?)\{panel\}/g, (match, title, content) => {
+                const lines = content.trim().split('\n').map(line => `> ${line}`);
+                if (title) {
+                    lines.unshift(`> **${title}**`, '>');
+                }
+                return lines.join('\n');
+            });
+
+            // Color (strip it, MD doesn't support color)
+            text = text.replace(/\{color:[^}]+\}([\s\S]*?)\{color\}/g, '$1');
+
+            // Tables
+            // First find table sections and process them
+            text = text.replace(/((?:^\|.+\|$\n?)+)/gm, (tableBlock) => {
+                const lines = tableBlock.trim().split('\n');
+                const processedLines = [];
+                let needsSeparator = false;
+
+                for (const line of lines) {
+                    // Header row: ||col||col||
+                    if (line.includes('||')) {
+                        const cells = line.split('||').filter(c => c !== '');
+                        processedLines.push('| ' + cells.join(' | ') + ' |');
+                        needsSeparator = true;
+                    }
+                    // Regular row: |col|col|
+                    else if (line.match(/^\|[^|]/)) {
+                        if (needsSeparator && processedLines.length > 0) {
+                            // Add separator after header
+                            const colCount = (processedLines[processedLines.length - 1].match(/\|/g) || []).length - 1;
+                            processedLines.push('|' + ' --- |'.repeat(colCount));
+                            needsSeparator = false;
+                        }
+                        const cells = line.split('|').filter((c, i, arr) => i > 0 && i < arr.length - 1);
+                        processedLines.push('| ' + cells.join(' | ') + ' |');
+                    }
+                }
+
+                return processedLines.join('\n');
+            });
+
+            // Horizontal rule: ---- -> ---
+            text = text.replace(/^-{4,}$/gm, '---');
+
+            // Line breaks: \\ -> <br> or two spaces
+            text = text.replace(/\\\\/g, '  \n');
+
+            // Anchor: {anchor:name} -> remove (no direct MD equivalent)
+            text = text.replace(/\{anchor:[^}]+\}/g, '');
+
+            // TOC: {toc} -> remove
+            text = text.replace(/\{toc(?::[^}]*)?\}/g, '');
+
+            // User mentions: [~username] -> @username
+            text = text.replace(/\[~([^\]]+)\]/g, '@$1');
+
+            // Restore headings
+            headings.forEach((h, index) => {
+                const mdHeading = '#'.repeat(h.level) + ' ' + h.content;
+                text = text.replace(`__HEADING_${index}__`, mdHeading);
+            });
+
+            // Restore code blocks
+            codeBlocks.forEach((block, index) => {
+                const mdBlock = '```' + block.lang + '\n' + block.code.trim() + '\n```';
+                text = text.replace(`__CODE_BLOCK_${index}__`, mdBlock);
+            });
+
+            // Restore noformat blocks
+            noformatBlocks.forEach((content, index) => {
+                const mdBlock = '```\n' + content.trim() + '\n```';
+                text = text.replace(`__NOFORMAT_BLOCK_${index}__`, mdBlock);
+            });
+
+            return text;
+        }
+
+        // ===== UI =====
+        const input = document.getElementById('input');
+        const output = document.getElementById('output');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+
+        function convert() {
+            output.value = jiraToMarkdown(input.value);
+        }
+
+        // Real-time conversion
+        input.addEventListener('input', convert);
+
+        // Copy button
+        copyBtn.addEventListener('click', () => {
+            if (!output.value) return;
+
+            navigator.clipboard.writeText(output.value).then(() => {
+                const original = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.add('copied');
+                setTimeout(() => {
+                    copyBtn.textContent = original;
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+
+        // Clear button
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            output.value = '';
+            input.focus();
+        });
+
+        // Convert on load if there's content (for testing)
+        convert();
+    </script>
+</body>
+</html>
