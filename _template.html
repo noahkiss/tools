@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - Noah's Tools</title>
+    <style>
+        /* ===== Theme Variables ===== */
+        :root {
+            --color-bg: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-text: #1a1a2e;
+            --color-text-muted: #6c757d;
+            --color-border: #dee2e6;
+            --color-primary: #4a90e2;
+            --color-primary-hover: #357abd;
+            --color-error: #dc3545;
+            --color-error-bg: #f8d7da;
+            --color-success: #28a745;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] {
+            --color-bg: #1a1a2e;
+            --color-surface: #252542;
+            --color-text: #e8e8e8;
+            --color-text-muted: #a0a0a0;
+            --color-border: #3d3d5c;
+            --color-primary: #5c9ce6;
+            --color-primary-hover: #7ab3f0;
+            --color-error: #f87171;
+            --color-error-bg: #3d2a2a;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== Base Styles ===== */
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                         Helvetica, Arial, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ===== Header ===== */
+        .site-header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .site-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .site-logo img {
+            height: 32px;
+            width: auto;
+        }
+
+        .logo-dark { display: none; }
+        .logo-light { display: block; }
+        [data-theme="dark"] .logo-dark { display: block; }
+        [data-theme="dark"] .logo-light { display: none; }
+
+        .theme-toggle {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--color-bg);
+        }
+
+        /* ===== Main Content ===== */
+        main {
+            max-width: {{MAX_WIDTH}};
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .tool-container {
+            background: var(--color-surface);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+        }
+
+        .tool-description {
+            color: var(--color-text-muted);
+            margin: 0 0 24px 0;
+        }
+
+        /* ===== Tool-specific styles ===== */
+{{STYLES}}
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <a href="/" class="site-logo">
+            <img src="../assets/logo-black-64.png" alt="" class="logo-light">
+            <img src="../assets/logo-white-64.png" alt="" class="logo-dark">
+            <span>Noah's Tools</span>
+        </a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+            🌙
+        </button>
+    </header>
+
+    <main>
+        <article class="tool-container">
+            <h1>{{TITLE}}</h1>
+            <p class="tool-description">{{DESCRIPTION}}</p>
+{{CONTENT}}
+        </article>
+    </main>
+
+    <script src="../footer.js"></script>
+    <script>
+        // ===== Theme Toggle =====
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemDark ? 'dark' : 'light');
+        html.setAttribute('data-theme', initialTheme);
+        themeToggle.textContent = initialTheme === 'dark' ? '☀️' : '🌙';
+
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+    </script>
+    <script>
+{{SCRIPT}}
+    </script>
+</body>
+</html>

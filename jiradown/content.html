@@ -1,0 +1,120 @@
+<div class="editor-container">
+    <div class="editor-pane" id="jiraPane">
+        <label>
+            <span class="label-text">
+                <span class="active-indicator"></span>
+                Jira Markup
+            </span>
+            <div class="button-group">
+                <button id="clearJiraBtn" class="secondary">Clear</button>
+                <button id="copyJiraBtn">Copy</button>
+            </div>
+        </label>
+        <textarea id="jiraInput" placeholder="h1. Heading
+*bold* and _italic_
+-strikethrough- and +underline+
+{{monospace}} inline code
+
+{code:javascript}
+const hello = 'world';
+{code}
+
+# numbered list
+## nested item
+* bullet list
+** nested item
+
+[link text|https://example.com]
+!image.png|alt=description!
+
+||Header 1||Header 2||
+|Cell 1|Cell 2|
+
+{quote}
+This is a blockquote
+{quote}
+
+{panel:title=Panel Title}
+Panel content here
+{panel}
+
+[~username] mention
+----"></textarea>
+    </div>
+
+    <div class="editor-pane" id="mdPane">
+        <label>
+            <span class="label-text">
+                <span class="active-indicator"></span>
+                Markdown
+            </span>
+            <div class="button-group">
+                <button id="clearMdBtn" class="secondary">Clear</button>
+                <button id="copyMdBtn">Copy</button>
+            </div>
+        </label>
+        <textarea id="mdInput" placeholder="# Heading
+**bold** and *italic*
+~~strikethrough~~ and underline
+`monospace` inline code
+
+```javascript
+const hello = 'world';
+```
+
+1. numbered list
+   1. nested item
+- bullet list
+  - nested item
+
+[link text](https://example.com)
+![description](image.png)
+
+| Header 1 | Header 2 |
+| --- | --- |
+| Cell 1 | Cell 2 |
+
+> This is a blockquote
+
+@username mention
+---"></textarea>
+    </div>
+</div>
+
+<section class="reference" id="reference">
+    <h2>Syntax Reference</h2>
+    <div class="reference-content">
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Jira</th>
+                    <th>Markdown</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Headings</td><td><code>h1. Title</code> to <code>h6.</code></td><td><code># Title</code> to <code>######</code></td></tr>
+                <tr><td>Bold</td><td><code>*bold*</code></td><td><code>**bold**</code></td></tr>
+                <tr><td>Italic</td><td><code>_italic_</code></td><td><code>*italic*</code></td></tr>
+                <tr><td>Bold+Italic</td><td><code>*_text_*</code></td><td><code>***text***</code></td></tr>
+                <tr><td>Strikethrough</td><td><code>-text-</code></td><td><code>~~text~~</code></td></tr>
+                <tr><td>Underline</td><td><code>+text+</code></td><td><code>&lt;ins&gt;text&lt;/ins&gt;</code></td></tr>
+                <tr><td>Monospace</td><td><code>{{code}}</code></td><td><code>`code`</code></td></tr>
+                <tr><td>Superscript</td><td><code>^text^</code></td><td><code>&lt;sup&gt;text&lt;/sup&gt;</code></td></tr>
+                <tr><td>Subscript</td><td><code>~text~</code></td><td><code>&lt;sub&gt;text&lt;/sub&gt;</code></td></tr>
+                <tr><td>Code Block</td><td><code>{code:lang}...{code}</code></td><td><code>```lang...```</code></td></tr>
+                <tr><td>Links</td><td><code>[text|url]</code></td><td><code>[text](url)</code></td></tr>
+                <tr><td>Images</td><td><code>!url|alt=text!</code></td><td><code>![text](url)</code></td></tr>
+                <tr><td>Bullet List</td><td><code>* item</code></td><td><code>- item</code></td></tr>
+                <tr><td>Numbered List</td><td><code># item</code></td><td><code>1. item</code></td></tr>
+                <tr><td>Nested List</td><td><code>** or ##</code></td><td>2-space indent</td></tr>
+                <tr><td>Blockquote</td><td><code>{quote}...{quote}</code></td><td><code>> text</code></td></tr>
+                <tr><td>Table Header</td><td><code>||h1||h2||</code></td><td><code>| h1 | h2 |</code></td></tr>
+                <tr><td>Table Row</td><td><code>|c1|c2|</code></td><td><code>| c1 | c2 |</code></td></tr>
+                <tr><td>Horizontal Rule</td><td><code>----</code></td><td><code>---</code></td></tr>
+                <tr><td>Mentions</td><td><code>[~username]</code></td><td><code>@username</code></td></tr>
+                <tr><td>Escaped Braces</td><td><code>\{</code> <code>\}</code></td><td><code>{</code> <code>}</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>

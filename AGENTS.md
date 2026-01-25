@@ -36,12 +36,15 @@ When the user describes a tool idea:
 
 ### Step 2: Create the Tool Folder
 
-**Structure**: Each tool lives in its own folder with an `index.html`:
+**Structure**: Each tool lives in its own folder with source files:
 
 ```
 {tool-name}/
-├── index.html     # The tool itself
-└── docs.md        # Documentation (2-4 sentences)
+├── content.html   # Main HTML content (inside <article>)
+├── styles.css     # Tool-specific CSS
+├── script.js      # Tool-specific JavaScript
+├── docs.md        # Description and metadata
+└── index.html     # BUILD ARTIFACT - auto-generated, never edit directly
 ```
 
 **Naming**: Use kebab-case for folder names (e.g., `json-formatter/`, `color-picker/`)
@@ -50,25 +53,49 @@ When the user describes a tool idea:
 - `https://noahkiss.github.io/tools/json-formatter/`
 - `https://noahkiss.github.io/tools/color-picker/`
 
-**Required structure**:
+**How it works**:
+- `_template.html` contains the shared layout (header, footer, theme toggle)
+- `build.py` combines template + source files to generate `index.html`
+- A GitHub Action runs the build automatically on push
+- **Never edit `index.html` directly** - it will be overwritten
+
+**Source files**:
+
+`content.html` - The main content that goes inside the `<article>` tag:
 ```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tool Name</title>
-    <style>
-        /* Inline CSS here */
-    </style>
-</head>
-<body>
-    <!-- Tool UI here -->
-    <script>
-        // Inline JavaScript here
-    </script>
-</body>
-</html>
+<div class="my-tool">
+    <input type="text" id="input" placeholder="Enter text...">
+    <button id="convert">Convert</button>
+    <output id="result"></output>
+</div>
+```
+
+`styles.css` - Tool-specific styles (theme variables are available):
+```css
+.my-tool {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+#result {
+    background: var(--color-bg);
+    padding: 12px;
+    border-radius: 6px;
+}
+```
+
+`script.js` - Tool-specific JavaScript:
+```javascript
+document.getElementById('convert').addEventListener('click', () => {
+    const input = document.getElementById('input').value;
+    document.getElementById('result').textContent = processInput(input);
+});
+
+function processInput(text) {
+    // Your logic here
+    return text.toUpperCase();
+}
 ```
 
 ### Step 3: Create Documentation
@@ -76,6 +103,10 @@ When the user describes a tool idea:
 **Filename**: `{tool-name}/docs.md` (inside the tool folder)
 
 **Content**: 1-2 sentences max. Describe what the tool does at a high level. This appears on the landing page, so keep it scannable.
+
+**Metadata** (HTML comments at top of file):
+- `<!-- category: Text & Data -->` - Which section on the landing page
+- `<!-- max-width: 1400px -->` - Override default 900px max-width for wider tools
 
 **Avoid**:
 - Syntax examples or code snippets (e.g., `` `{code:js}` ``)
@@ -85,6 +116,7 @@ When the user describes a tool idea:
 Example:
 ```markdown
 <!-- category: Text & Data -->
+<!-- max-width: 1200px -->
 
 Bidirectional converter between Jira wiki markup and Markdown. Edit either pane and the other updates in real-time.
 ```

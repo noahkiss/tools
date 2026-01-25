@@ -1,0 +1,40 @@
+name: Build Tools
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '_template.html'
+      - '**/content.html'
+      - '**/styles.css'
+      - '**/script.js'
+      - '**/docs.md'
+      - 'build.py'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build tools
+        run: python build.py
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet || echo "changes=true" >> $GITHUB_OUTPUT
+
+      - name: Commit built files
+        if: steps.changes.outputs.changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Build: Update generated index.html files [skip ci]"
+          git push
