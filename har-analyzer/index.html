@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAR Analyzer - Noah's Tools</title>
+    <style>
+        /* ===== Theme Variables ===== */
+        :root {
+            --color-bg: #f8f9fa;
+            --color-surface: #ffffff;
+            --color-text: #1a1a2e;
+            --color-text-muted: #6c757d;
+            --color-border: #dee2e6;
+            --color-primary: #4a90e2;
+            --color-primary-hover: #357abd;
+            --color-error: #dc3545;
+            --color-error-bg: #f8d7da;
+            --color-success: #28a745;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        [data-theme="dark"] {
+            --color-bg: #1a1a2e;
+            --color-surface: #252542;
+            --color-text: #e8e8e8;
+            --color-text-muted: #a0a0a0;
+            --color-border: #3d3d5c;
+            --color-primary: #5c9ce6;
+            --color-primary-hover: #7ab3f0;
+            --color-error: #f87171;
+            --color-error-bg: #3d2a2a;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ===== Base Styles ===== */
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                         Helvetica, Arial, sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ===== Header ===== */
+        .site-header {
+            background: var(--color-surface);
+            border-bottom: 1px solid var(--color-border);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .site-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .site-logo img {
+            height: 32px;
+            width: auto;
+        }
+
+        .logo-dark { display: none; }
+        .logo-light { display: block; }
+        [data-theme="dark"] .logo-dark { display: block; }
+        [data-theme="dark"] .logo-light { display: none; }
+
+        .theme-toggle {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--color-bg);
+        }
+
+        /* ===== Main Content ===== */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .tool-container {
+            background: var(--color-surface);
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+        }
+
+        .tool-description {
+            color: var(--color-text-muted);
+            margin: 0 0 24px 0;
+        }
+
+        /* ===== Tool-specific styles ===== */
+/* ===== Drop Zone ===== */
+.dropzone {
+    border: 2px dashed var(--color-border);
+    border-radius: 8px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.dropzone:hover,
+.dropzone.drag-over {
+    border-color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+}
+
+.dropzone-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.dropzone-text {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.dropzone-text code {
+    background: var(--color-bg);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 14px;
+}
+
+.dropzone-hint {
+    font-size: 13px;
+    color: var(--color-text-muted);
+}
+
+/* ===== Results ===== */
+.results-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ===== Toolbar ===== */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.stats {
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+.stats strong {
+    color: var(--color-text);
+}
+
+/* ===== Filters ===== */
+.filters {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 0;
+}
+
+.filters summary {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    user-select: none;
+}
+
+.filter-content {
+    padding: 0 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-label {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.filter-hint {
+    font-weight: 400;
+    color: var(--color-text-muted);
+}
+
+.filter-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin: 0;
+}
+
+.filter-content textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-size: 12px;
+    resize: vertical;
+}
+
+.filter-content textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* ===== Tabs ===== */
+.tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.tab {
+    background: none;
+    color: var(--color-text-muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 16px;
+    margin-bottom: -2px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 0;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.tab:hover {
+    color: var(--color-text);
+    background: none;
+}
+
+.tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    background: none;
+}
+
+/* ===== Tab Content ===== */
+.tab-content {
+    position: relative;
+}
+
+.tab-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+#yamlTab pre {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 0;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+#yamlTab code {
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre;
+    color: var(--color-text);
+}
+
+/* ===== Mermaid Diagram ===== */
+#mermaidOutput {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 24px;
+    overflow-x: auto;
+    text-align: center;
+    min-height: 200px;
+}
+
+#mermaidOutput svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ===== Requests List ===== */
+.request-card {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.request-card summary {
+    padding: 10px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    user-select: none;
+}
+
+.request-card summary:hover {
+    background: var(--color-bg);
+}
+
+.method-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    min-width: 42px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.method-GET { background: #28a745; }
+.method-POST { background: #007bff; }
+.method-PUT { background: #fd7e14; }
+.method-PATCH { background: #6f42c1; }
+.method-DELETE { background: #dc3545; }
+.method-OPTIONS { background: #6c757d; }
+.method-HEAD { background: #6c757d; }
+
+.status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.status-2xx { color: #28a745; background: color-mix(in srgb, #28a745 15%, transparent); }
+.status-3xx { color: #fd7e14; background: color-mix(in srgb, #fd7e14 15%, transparent); }
+.status-4xx { color: #dc3545; background: color-mix(in srgb, #dc3545 15%, transparent); }
+.status-5xx { color: #dc3545; background: color-mix(in srgb, #dc3545 15%, transparent); }
+
+.request-path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.request-detail {
+    padding: 0 14px 14px;
+}
+
+.detail-section {
+    margin-bottom: 12px;
+}
+
+.detail-section h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    margin: 0 0 6px 0;
+    letter-spacing: 0.5px;
+}
+
+.detail-section pre {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 10px;
+    margin: 0;
+    overflow-x: auto;
+    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.dep-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+    color: var(--color-primary);
+    margin-left: 8px;
+}
+
+/* ===== Buttons ===== */
+button {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: var(--color-primary-hover);
+}
+
+button.secondary {
+    background: var(--color-border);
+    color: var(--color-text);
+}
+
+button.secondary:hover {
+    background: var(--color-text-muted);
+    color: white;
+}
+
+button.copied {
+    background: var(--color-success);
+}
+
+/* ===== Error ===== */
+.error {
+    color: var(--color-error);
+    background: var(--color-error-bg);
+    padding: 12px;
+    border-radius: 6px;
+    display: none;
+    margin-top: 16px;
+}
+
+.error.visible {
+    display: block;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+    .dropzone {
+        padding: 32px 16px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .request-card summary {
+        font-size: 12px;
+    }
+
+    .tab {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <a href="/" class="site-logo">
+            <img src="../assets/logo-black-64.png" alt="" class="logo-light">
+            <img src="../assets/logo-white-64.png" alt="" class="logo-dark">
+            <span>Noah's Tools</span>
+        </a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+            🌙
+        </button>
+    </header>
+
+    <main>
+        <article class="tool-container">
+            <h1>HAR Analyzer</h1>
+            <p class="tool-description">Upload a HAR file to extract API calls and document requests into a simplified YAML workflow with dependency detection and a visual flow diagram.</p>
+<div id="uploadSection">
+    <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">&#x1F4E6;</div>
+        <div class="dropzone-text">Drop a <code>.har</code> file here, or click to select</div>
+        <div class="dropzone-hint">Export from browser DevTools: Network tab &rarr; Export HAR</div>
+    </div>
+    <input type="file" id="fileInput" accept=".har" hidden>
+</div>
+
+<div id="resultsSection" class="results-section" hidden>
+    <div class="toolbar">
+        <div class="stats" id="stats"></div>
+        <div class="toolbar-actions">
+            <button id="newFileBtn" class="secondary">New File</button>
+        </div>
+    </div>
+
+    <details class="filters" id="filters">
+        <summary>Filters</summary>
+        <div class="filter-content">
+            <div class="filter-group">
+                <label class="filter-label">Resource Types</label>
+                <div class="filter-checkboxes" id="resourceTypeFilters"></div>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="excludePatterns">Exclude URL patterns <span class="filter-hint">(one per line, matched as substring)</span></label>
+                <textarea id="excludePatterns" rows="2" placeholder="analytics.google.com&#10;facebook.com/tr"></textarea>
+            </div>
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showAllHeaders">
+                    Show all headers <span class="filter-hint">(includes browser-internal headers)</span>
+                </label>
+            </div>
+        </div>
+    </details>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="yaml">YAML</button>
+        <button class="tab" data-tab="diagram">Diagram</button>
+        <button class="tab" data-tab="requests">Requests</button>
+    </div>
+
+    <div class="tab-content" id="yamlTab">
+        <div class="tab-actions">
+            <button id="copyYamlBtn">Copy</button>
+            <button id="downloadYamlBtn" class="secondary">Download</button>
+        </div>
+        <pre><code id="yamlOutput"></code></pre>
+    </div>
+
+    <div class="tab-content" id="diagramTab" hidden>
+        <div id="mermaidOutput"></div>
+    </div>
+
+    <div class="tab-content" id="requestsTab" hidden>
+        <div id="requestsList"></div>
+    </div>
+</div>
+
+<div id="error" class="error" role="alert"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+        </article>
+    </main>
+
+    <script src="../footer.js"></script>
+    <script>
+        // ===== Theme Toggle =====
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        const savedTheme = localStorage.getItem('theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initialTheme = savedTheme || (systemDark ? 'dark' : 'light');
+        html.setAttribute('data-theme', initialTheme);
+        themeToggle.textContent = initialTheme === 'dark' ? '☀️' : '🌙';
+
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+    </script>
+    <script>
+// ===== State =====
+let rawHar = null;
+let fileName = '';
+
+// Resource types and their default enabled state
+const RESOURCE_TYPES = {
+    fetch: true,
+    xhr: true,
+    xmlhttprequest: true,
+    document: true,
+    script: false,
+    stylesheet: false,
+    image: false,
+    font: false,
+    media: false,
+    websocket: false,
+    manifest: false,
+    other: false,
+};
+
+// Browser-internal headers to hide by default
+const NOISE_HEADERS = new Set([
+    'sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform', 'sec-ch-ua-full-version-list',
+    'sec-ch-ua-arch', 'sec-ch-ua-bitness', 'sec-ch-ua-model', 'sec-ch-ua-wow64',
+    'sec-fetch-dest', 'sec-fetch-mode', 'sec-fetch-site', 'sec-fetch-user',
+    'upgrade-insecure-requests', 'dnt', 'connection', 'host',
+    'accept-encoding', 'accept-language',
+]);
+
+// ===== DOM Refs =====
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const uploadSection = document.getElementById('uploadSection');
+const resultsSection = document.getElementById('resultsSection');
+const statsEl = document.getElementById('stats');
+const errorEl = document.getElementById('error');
+const yamlOutput = document.getElementById('yamlOutput');
+const mermaidOutput = document.getElementById('mermaidOutput');
+const requestsList = document.getElementById('requestsList');
+const resourceTypeFilters = document.getElementById('resourceTypeFilters');
+const excludePatterns = document.getElementById('excludePatterns');
+const showAllHeaders = document.getElementById('showAllHeaders');
+
+// ===== Init =====
+mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+
+buildResourceTypeCheckboxes();
+setupEventListeners();
+
+// ===== File Upload =====
+function setupEventListeners() {
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropzone.classList.add('drag-over');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+    dropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropzone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', e => {
+        if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    document.getElementById('newFileBtn').addEventListener('click', resetUI);
+    document.getElementById('copyYamlBtn').addEventListener('click', copyYaml);
+    document.getElementById('downloadYamlBtn').addEventListener('click', downloadYaml);
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    });
+
+    // Re-process on filter change
+    resourceTypeFilters.addEventListener('change', reprocess);
+    excludePatterns.addEventListener('input', debounce(reprocess, 300));
+    showAllHeaders.addEventListener('change', reprocess);
+}
+
+function handleFile(file) {
+    if (!file.name.endsWith('.har')) {
+        showError('Please upload a .har file');
+        return;
+    }
+    hideError();
+    fileName = file.name;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            rawHar = JSON.parse(e.target.result);
+            if (!rawHar.log || !Array.isArray(rawHar.log.entries)) {
+                throw new Error('Invalid HAR format: missing log.entries');
+            }
+            process();
+        } catch (err) {
+            showError(`Failed to parse HAR: ${err.message}`);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// ===== Processing Pipeline =====
+function process() {
+    const entries = rawHar.log.entries;
+    const enabledTypes = getEnabledTypes();
+    const excludes = getExcludePatterns();
+    const allHeaders = showAllHeaders.checked;
+
+    // Filter
+    const filtered = entries.filter(entry => {
+        const type = (entry._resourceType || guessResourceType(entry)).toLowerCase();
+        if (!enabledTypes.has(type)) return false;
+        const url = entry.request.url;
+        return !excludes.some(p => url.includes(p));
+    });
+
+    // Sort by time
+    filtered.sort((a, b) => new Date(a.startedDateTime) - new Date(b.startedDateTime));
+
+    // Parse entries
+    const requests = filtered.map((entry, i) => parseEntry(entry, i, allHeaders));
+
+    // Detect dependencies
+    const deps = detectDependencies(requests);
+
+    // Update stats
+    statsEl.innerHTML = `<strong>${requests.length}</strong> requests from <strong>${entries.length}</strong> entries &middot; <strong>${deps.length}</strong> dependencies detected &middot; <em>${fileName}</em>`;
+
+    // Generate outputs
+    const yaml = generateYaml(requests, deps);
+    yamlOutput.textContent = yaml;
+
+    renderMermaid(requests, deps);
+    renderRequestsList(requests, deps);
+
+    // Show results
+    uploadSection.hidden = true;
+    resultsSection.hidden = false;
+}
+
+function reprocess() {
+    if (rawHar) process();
+}
+
+// ===== Entry Parsing =====
+function parseEntry(entry, index, allHeaders) {
+    const req = entry.request;
+    const res = entry.response;
+    const urlObj = new URL(req.url);
+
+    // Filter headers
+    const headers = {};
+    for (const h of req.headers) {
+        const name = h.name.toLowerCase();
+        if (!allHeaders && NOISE_HEADERS.has(name)) continue;
+        headers[h.name] = h.value;
+    }
+
+    // Response headers
+    const resHeaders = {};
+    for (const h of res.headers) {
+        const name = h.name.toLowerCase();
+        if (!allHeaders && NOISE_HEADERS.has(name)) continue;
+        resHeaders[h.name] = h.value;
+    }
+
+    // Parse body
+    let body = null;
+    if (req.postData && req.postData.text) {
+        body = tryParseJson(req.postData.text) || req.postData.text;
+    }
+
+    // Parse response body
+    let responseBody = null;
+    if (res.content && res.content.text) {
+        responseBody = tryParseJson(res.content.text);
+        // Keep as string if not JSON but not too large
+        if (!responseBody && res.content.text.length < 5000) {
+            responseBody = res.content.text;
+        }
+    }
+
+    const path = urlObj.pathname + (urlObj.search || '');
+    const name = `${req.method} ${urlObj.pathname}`;
+
+    return {
+        index,
+        name,
+        method: req.method,
+        url: req.url,
+        host: urlObj.host,
+        path,
+        headers,
+        body,
+        response: {
+            status: res.status,
+            statusText: res.statusText,
+            contentType: res.content ? res.content.mimeType : '',
+            headers: resHeaders,
+            body: responseBody,
+        },
+        time: entry.startedDateTime,
+        resourceType: entry._resourceType || guessResourceType(entry),
+    };
+}
+
+function guessResourceType(entry) {
+    const url = entry.request.url.toLowerCase();
+    const mime = (entry.response.content && entry.response.content.mimeType) || '';
+    if (mime.includes('html')) return 'document';
+    if (mime.includes('javascript')) return 'script';
+    if (mime.includes('css')) return 'stylesheet';
+    if (mime.includes('image')) return 'image';
+    if (mime.includes('font')) return 'font';
+    if (mime.includes('json') || mime.includes('xml')) return 'fetch';
+    if (url.match(/\.(js|mjs)(\?|$)/)) return 'script';
+    if (url.match(/\.css(\?|$)/)) return 'stylesheet';
+    if (url.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)(\?|$)/)) return 'image';
+    if (url.match(/\.(woff2?|ttf|otf|eot)(\?|$)/)) return 'font';
+    return 'other';
+}
+
+// ===== Dependency Detection =====
+function detectDependencies(requests) {
+    // Build a map of response values → source request
+    const valueMap = new Map(); // value → { reqIndex, path }
+    const deps = [];
+
+    for (let i = 0; i < requests.length; i++) {
+        const req = requests[i];
+        const resBody = req.response.body;
+
+        // Check this request against previously indexed values
+        if (i > 0) {
+            const found = findDepsInRequest(req, valueMap);
+            for (const dep of found) {
+                deps.push({ from: dep.sourceIndex, to: i, via: dep.path, value: dep.matchedValue });
+            }
+        }
+
+        // Index this response's values
+        if (resBody && typeof resBody === 'object') {
+            indexValues(resBody, i, '', valueMap);
+        }
+    }
+
+    return deps;
+}
+
+function indexValues(obj, reqIndex, prefix, map) {
+    if (Array.isArray(obj)) {
+        obj.forEach((item, i) => indexValues(item, reqIndex, `${prefix}[${i}]`, map));
+        return;
+    }
+    if (obj && typeof obj === 'object') {
+        for (const [key, val] of Object.entries(obj)) {
+            indexValues(val, reqIndex, prefix ? `${prefix}.${key}` : key, map);
+        }
+        return;
+    }
+    // Leaf value - index strings > 8 chars, < 1000 chars
+    if (typeof obj === 'string' && obj.length > 8 && obj.length < 1000) {
+        // Skip values that look like timestamps, common strings, or URIs that are just URLs
+        if (/^\d{4}-\d{2}-\d{2}/.test(obj)) return;
+        if (/^https?:\/\//.test(obj)) return;
+        map.set(obj, { reqIndex, path: prefix });
+    }
+}
+
+function findDepsInRequest(req, valueMap) {
+    const found = [];
+    const seen = new Set(); // avoid duplicate deps to same source
+
+    function checkValue(val) {
+        if (typeof val !== 'string' || val.length <= 8) return;
+        // Check for exact match
+        const match = valueMap.get(val);
+        if (match && !seen.has(match.reqIndex)) {
+            seen.add(match.reqIndex);
+            found.push({ sourceIndex: match.reqIndex, path: match.path, matchedValue: val });
+            return;
+        }
+        // Check for substring match (e.g., "Bearer <token>")
+        for (const [mapVal, source] of valueMap) {
+            if (val.includes(mapVal) && !seen.has(source.reqIndex)) {
+                seen.add(source.reqIndex);
+                found.push({ sourceIndex: source.reqIndex, path: source.path, matchedValue: mapVal });
+            }
+        }
+    }
+
+    // Check headers
+    for (const val of Object.values(req.headers)) {
+        checkValue(val);
+    }
+
+    // Check URL
+    checkValue(req.url);
+
+    // Check body
+    if (req.body) {
+        if (typeof req.body === 'string') {
+            checkValue(req.body);
+        } else {
+            walkValues(req.body, checkValue);
+        }
+    }
+
+    return found;
+}
+
+function walkValues(obj, fn) {
+    if (Array.isArray(obj)) {
+        obj.forEach(item => walkValues(item, fn));
+    } else if (obj && typeof obj === 'object') {
+        Object.values(obj).forEach(val => walkValues(val, fn));
+    } else if (typeof obj === 'string') {
+        fn(obj);
+    }
+}
+
+// ===== YAML Generation =====
+function generateYaml(requests, deps) {
+    // Build dep lookup: toIndex → [fromIndex]
+    const depLookup = {};
+    const depDetail = {};
+    for (const dep of deps) {
+        if (!depLookup[dep.to]) depLookup[dep.to] = [];
+        depLookup[dep.to].push(dep.from);
+        depDetail[`${dep.from}->${dep.to}`] = dep.via;
+    }
+
+    const firstTime = requests.length > 0 ? requests[0].time : '';
+
+    const flow = requests.map(req => {
+        const entry = {
+            name: req.name,
+            method: req.method,
+            url: req.url,
+        };
+
+        // Only include non-empty headers
+        if (Object.keys(req.headers).length > 0) {
+            entry.headers = req.headers;
+        }
+
+        if (req.body) {
+            entry.body = req.body;
+        }
+
+        entry.response = {
+            status: req.response.status,
+            content_type: req.response.contentType || undefined,
+        };
+
+        // Dependencies
+        if (depLookup[req.index]) {
+            entry.depends_on = depLookup[req.index].map(fromIdx => {
+                const source = requests.find(r => r.index === fromIdx);
+                const via = depDetail[`${fromIdx}->${req.index}`];
+                return `${source.name} (via ${via})`;
+            });
+        }
+
+        return entry;
+    });
+
+    const header = [
+        `# HAR Flow Analysis`,
+        `# Source: ${fileName}`,
+        `# Captured: ${firstTime}`,
+        `# Requests: ${requests.length} of ${rawHar.log.entries.length} entries`,
+        '',
+    ].join('\n');
+
+    return header + jsyaml.dump({ flow }, {
+        indent: 2,
+        lineWidth: 120,
+        noRefs: true,
+        quotingType: '"',
+        forceQuotes: false,
+    });
+}
+
+// ===== Mermaid Diagram =====
+async function renderMermaid(requests, deps) {
+    if (requests.length === 0) {
+        mermaidOutput.innerHTML = '<p style="color:var(--color-text-muted)">No requests to diagram</p>';
+        return;
+    }
+
+    // Limit diagram to avoid overwhelming mermaid
+    const maxNodes = 50;
+    const diagramRequests = requests.slice(0, maxNodes);
+    const truncated = requests.length > maxNodes;
+
+    let graph = 'flowchart TD\n';
+    graph += '    Start([Start])\n';
+
+    // Build nodes
+    for (const req of diagramRequests) {
+        const id = `R${req.index}`;
+        const label = `${req.method} ${truncatePath(req.path, 40)}`;
+        const status = req.response.status;
+        graph += `    ${id}["${escMermaid(label)}<br/>${status}"]\n`;
+
+        // Style by status
+        if (status >= 400) {
+            graph += `    style ${id} fill:#f8d7da,stroke:#dc3545,color:#721c24\n`;
+        } else if (status >= 300) {
+            graph += `    style ${id} fill:#fff3cd,stroke:#ffc107,color:#856404\n`;
+        }
+    }
+
+    // Build edges
+    const hasIncoming = new Set();
+    for (const dep of deps) {
+        if (dep.to >= maxNodes || dep.from >= maxNodes) continue;
+        hasIncoming.add(dep.to);
+        const label = dep.via.split('.').pop(); // just the last key
+        graph += `    R${dep.from} -->|${escMermaid(label)}| R${dep.to}\n`;
+    }
+
+    // Connect unlinked nodes to Start
+    for (const req of diagramRequests) {
+        if (!hasIncoming.has(req.index)) {
+            graph += `    Start --> R${req.index}\n`;
+        }
+    }
+
+    if (truncated) {
+        graph += `    More["... and ${requests.length - maxNodes} more"]\n`;
+        graph += `    style More fill:var(--color-bg),stroke:var(--color-border),color:var(--color-text-muted)\n`;
+    }
+
+    try {
+        const { svg } = await mermaid.render('mermaid-graph', graph);
+        mermaidOutput.innerHTML = svg;
+    } catch (err) {
+        mermaidOutput.innerHTML = `<pre style="text-align:left;font-size:12px;color:var(--color-error)">${escHtml(err.message)}</pre><pre style="text-align:left;font-size:11px;color:var(--color-text-muted)">${escHtml(graph)}</pre>`;
+    }
+}
+
+// ===== Requests List =====
+function renderRequestsList(requests, deps) {
+    // Build dep lookup
+    const depsByTo = {};
+    for (const dep of deps) {
+        if (!depsByTo[dep.to]) depsByTo[dep.to] = [];
+        depsByTo[dep.to].push(dep);
+    }
+
+    requestsList.innerHTML = requests.map(req => {
+        const methodClass = `method-${req.method}`;
+        const statusClass = `status-${Math.floor(req.response.status / 100)}xx`;
+        const reqDeps = depsByTo[req.index] || [];
+        const depTags = reqDeps.map(d => {
+            const source = requests.find(r => r.index === d.from);
+            return `<span class="dep-tag">depends on ${escHtml(source.name)}</span>`;
+        }).join('');
+
+        let details = '';
+
+        // URL
+        details += detailSection('URL', req.url);
+
+        // Headers
+        if (Object.keys(req.headers).length > 0) {
+            details += detailSection('Request Headers', formatObj(req.headers));
+        }
+
+        // Body
+        if (req.body) {
+            const bodyStr = typeof req.body === 'object' ? JSON.stringify(req.body, null, 2) : req.body;
+            details += detailSection('Request Body', bodyStr);
+        }
+
+        // Response headers
+        if (Object.keys(req.response.headers).length > 0) {
+            details += detailSection('Response Headers', formatObj(req.response.headers));
+        }
+
+        // Response body
+        if (req.response.body) {
+            const bodyStr = typeof req.response.body === 'object'
+                ? JSON.stringify(req.response.body, null, 2)
+                : req.response.body;
+            const truncated = bodyStr.length > 5000;
+            details += detailSection(
+                'Response Body' + (truncated ? ' (truncated)' : ''),
+                truncated ? bodyStr.slice(0, 5000) + '\n...' : bodyStr
+            );
+        }
+
+        return `<details class="request-card">
+            <summary>
+                <span class="method-badge ${methodClass}">${req.method}</span>
+                <span class="status-badge ${statusClass}">${req.response.status}</span>
+                <span class="request-path">${escHtml(req.path)}</span>
+                ${depTags}
+            </summary>
+            <div class="request-detail">${details}</div>
+        </details>`;
+    }).join('');
+}
+
+function detailSection(title, content) {
+    return `<div class="detail-section"><h4>${escHtml(title)}</h4><pre>${escHtml(content)}</pre></div>`;
+}
+
+function formatObj(obj) {
+    return Object.entries(obj).map(([k, v]) => `${k}: ${v}`).join('\n');
+}
+
+// ===== Filter Controls =====
+function buildResourceTypeCheckboxes() {
+    resourceTypeFilters.innerHTML = Object.entries(RESOURCE_TYPES).map(([type, checked]) => {
+        // Normalize display names
+        const display = type === 'xmlhttprequest' ? 'XHR' : type.charAt(0).toUpperCase() + type.slice(1);
+        return `<label class="checkbox-label">
+            <input type="checkbox" value="${type}" ${checked ? 'checked' : ''}>
+            ${display}
+        </label>`;
+    }).join('');
+}
+
+function getEnabledTypes() {
+    const types = new Set();
+    resourceTypeFilters.querySelectorAll('input:checked').forEach(cb => types.add(cb.value));
+    return types;
+}
+
+function getExcludePatterns() {
+    return excludePatterns.value
+        .split('\n')
+        .map(p => p.trim())
+        .filter(Boolean);
+}
+
+// ===== Tab Switching =====
+function switchTab(tabName) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
+    document.getElementById('yamlTab').hidden = tabName !== 'yaml';
+    document.getElementById('diagramTab').hidden = tabName !== 'diagram';
+    document.getElementById('requestsTab').hidden = tabName !== 'requests';
+}
+
+// ===== Actions =====
+function copyYaml() {
+    const btn = document.getElementById('copyYamlBtn');
+    navigator.clipboard.writeText(yamlOutput.textContent).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function downloadYaml() {
+    const blob = new Blob([yamlOutput.textContent], { type: 'text/yaml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName.replace('.har', '') + '-flow.yaml';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function resetUI() {
+    rawHar = null;
+    fileName = '';
+    uploadSection.hidden = false;
+    resultsSection.hidden = true;
+    fileInput.value = '';
+    hideError();
+}
+
+// ===== Utilities =====
+function tryParseJson(str) {
+    try { return JSON.parse(str); } catch { return null; }
+}
+
+function escHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function escMermaid(str) {
+    return str.replace(/"/g, '#quot;').replace(/[<>{}|]/g, ' ');
+}
+
+function truncatePath(path, max) {
+    if (path.length <= max) return path;
+    return '...' + path.slice(-(max - 3));
+}
+
+function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.classList.add('visible');
+}
+
+function hideError() {
+    errorEl.classList.remove('visible');
+}
+
+function debounce(fn, ms) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), ms);
+    };
+}
+
+    </script>
+</body>
+</html>

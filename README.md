@@ -18,11 +18,11 @@ View the live tools at: **https://noahkiss.github.io/tools/**
 
 ## Development
 
-<!-- Add tools here as they're created -->
+- [HAR Analyzer](https://noahkiss.github.io/tools/har-analyzer/) - Extract API calls from HAR files into YAML workflows with dependency detection and flow diagrams
 
 ## Utilities
 
-<!-- Add tools here as they're created -->
+- [STFU](https://noahkiss.github.io/tools/stfu/) - Delayed auditory feedback loop for speech disruption
 
 ---
 

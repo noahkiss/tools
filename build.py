@@ -101,6 +101,10 @@ def build_tool_html(tool_dir: Path, template: str) -> bool:
     # Special case handling
     if tool_dir.name == "jiradown":
         title = "Jiradown"
+    elif tool_dir.name == "stfu":
+        title = "STFU"
+    elif tool_dir.name == "har-analyzer":
+        title = "HAR Analyzer"
 
     # Build the HTML
     html = template
@@ -163,6 +167,10 @@ def find_and_build_tools(tools_dir: Path) -> list:
         title = subdir.name.replace("-", " ").title()
         if subdir.name == "jiradown":
             title = "Jiradown"
+        elif subdir.name == "stfu":
+            title = "STFU"
+        elif subdir.name == "har-analyzer":
+            title = "HAR Analyzer"
 
         tool = {
             "slug": subdir.name,

@@ -1,0 +1,64 @@
+<div id="uploadSection">
+    <div id="dropzone" class="dropzone">
+        <div class="dropzone-icon">&#x1F4E6;</div>
+        <div class="dropzone-text">Drop a <code>.har</code> file here, or click to select</div>
+        <div class="dropzone-hint">Export from browser DevTools: Network tab &rarr; Export HAR</div>
+    </div>
+    <input type="file" id="fileInput" accept=".har" hidden>
+</div>
+
+<div id="resultsSection" class="results-section" hidden>
+    <div class="toolbar">
+        <div class="stats" id="stats"></div>
+        <div class="toolbar-actions">
+            <button id="newFileBtn" class="secondary">New File</button>
+        </div>
+    </div>
+
+    <details class="filters" id="filters">
+        <summary>Filters</summary>
+        <div class="filter-content">
+            <div class="filter-group">
+                <label class="filter-label">Resource Types</label>
+                <div class="filter-checkboxes" id="resourceTypeFilters"></div>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="excludePatterns">Exclude URL patterns <span class="filter-hint">(one per line, matched as substring)</span></label>
+                <textarea id="excludePatterns" rows="2" placeholder="analytics.google.com&#10;facebook.com/tr"></textarea>
+            </div>
+            <div class="filter-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showAllHeaders">
+                    Show all headers <span class="filter-hint">(includes browser-internal headers)</span>
+                </label>
+            </div>
+        </div>
+    </details>
+
+    <div class="tabs">
+        <button class="tab active" data-tab="yaml">YAML</button>
+        <button class="tab" data-tab="diagram">Diagram</button>
+        <button class="tab" data-tab="requests">Requests</button>
+    </div>
+
+    <div class="tab-content" id="yamlTab">
+        <div class="tab-actions">
+            <button id="copyYamlBtn">Copy</button>
+            <button id="downloadYamlBtn" class="secondary">Download</button>
+        </div>
+        <pre><code id="yamlOutput"></code></pre>
+    </div>
+
+    <div class="tab-content" id="diagramTab" hidden>
+        <div id="mermaidOutput"></div>
+    </div>
+
+    <div class="tab-content" id="requestsTab" hidden>
+        <div id="requestsList"></div>
+    </div>
+</div>
+
+<div id="error" class="error" role="alert"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
