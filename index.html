@@ -146,21 +146,7 @@
             margin-bottom: 32px;
         }
 
-        .search-input-wrapper {
-            position: relative;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--pico-muted-color);
-            pointer-events: none;
-        }
-
         #search-input {
-            padding-left: 44px;
             margin-bottom: 0;
         }
 
@@ -297,15 +283,7 @@
         <p class="tagline">A collection of single-file HTML tools, built with the help of LLMs.</p>
 
         <div class="search-container">
-            <div class="search-input-wrapper">
-                <span class="search-icon">
-                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="9" cy="9" r="6"/>
-                        <line x1="13.5" y1="13.5" x2="18" y2="18" stroke-linecap="round"/>
-                    </svg>
-                </span>
-                <input type="search" id="search-input" placeholder="Search tools..." autocomplete="off">
-            </div>
+            <input type="search" id="search-input" placeholder="Search tools..." autocomplete="off">
             <p class="search-hint">Press <kbd>/</kbd> to focus search</p>
         </div>
 
