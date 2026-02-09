@@ -38,6 +38,7 @@ const yamlOutput = document.getElementById('yamlOutput');
 const mermaidOutput = document.getElementById('mermaidOutput');
 const requestsList = document.getElementById('requestsList');
 const resourceTypeFilters = document.getElementById('resourceTypeFilters');
+const domainFilters = document.getElementById('domainFilters');
 const excludePatterns = document.getElementById('excludePatterns');
 const showAllHeaders = document.getElementById('showAllHeaders');
 
@@ -75,6 +76,7 @@ function setupEventListeners() {
 
     // Re-process on filter change
     resourceTypeFilters.addEventListener('change', reprocess);
+    domainFilters.addEventListener('change', reprocess);
     excludePatterns.addEventListener('input', debounce(reprocess, 300));
     showAllHeaders.addEventListener('change', reprocess);
 }
@@ -94,6 +96,7 @@ function handleFile(file) {
             if (!rawHar.log || !Array.isArray(rawHar.log.entries)) {
                 throw new Error('Invalid HAR format: missing log.entries');
             }
+            buildDomainCheckboxes();
             process();
         } catch (err) {
             showError(`Failed to parse HAR: ${err.message}`);
@@ -106,6 +109,7 @@ function handleFile(file) {
 function process() {
     const entries = rawHar.log.entries;
     const enabledTypes = getEnabledTypes();
+    const enabledDomains = getEnabledDomains();
     const excludes = getExcludePatterns();
     const allHeaders = showAllHeaders.checked;
 
@@ -113,6 +117,10 @@ function process() {
     const filtered = entries.filter(entry => {
         const type = (entry._resourceType || guessResourceType(entry)).toLowerCase();
         if (!enabledTypes.has(type)) return false;
+        try {
+            const host = new URL(entry.request.url).host;
+            if (!enabledDomains.has(host)) return false;
+        } catch {}
         const url = entry.request.url;
         return !excludes.some(p => url.includes(p));
     });
@@ -531,6 +539,30 @@ function getEnabledTypes() {
     const types = new Set();
     resourceTypeFilters.querySelectorAll('input:checked').forEach(cb => types.add(cb.value));
     return types;
+}
+
+function buildDomainCheckboxes() {
+    const domains = new Map();
+    for (const entry of rawHar.log.entries) {
+        try {
+            const host = new URL(entry.request.url).host;
+            domains.set(host, (domains.get(host) || 0) + 1);
+        } catch {}
+    }
+    // Sort by request count descending
+    const sorted = [...domains.entries()].sort((a, b) => b[1] - a[1]);
+    domainFilters.innerHTML = sorted.map(([domain, count]) =>
+        `<label class="checkbox-label">
+            <input type="checkbox" value="${domain}" checked>
+            ${domain} <span class="filter-hint">(${count})</span>
+        </label>`
+    ).join('');
+}
+
+function getEnabledDomains() {
+    const domains = new Set();
+    domainFilters.querySelectorAll('input:checked').forEach(cb => domains.add(cb.value));
+    return domains;
 }
 
 function getExcludePatterns() {
