@@ -3,62 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>Noah's Tools</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/mshaugh/nerdfont-webfonts@v3.3.0/build/jetbrainsmono-nerd-font.css">
     <style>
-        /* ===== Theme Variables ===== */
-        :root {
-            --color-bg: #f8f9fa;
-            --color-surface: #ffffff;
-            --color-text: #1a1a2e;
-            --color-text-muted: #6c757d;
-            --color-border: #dee2e6;
-            --color-primary: #4a90e2;
-            --color-primary-hover: #357abd;
-            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        /* ===== Catppuccin Latte (Light) ===== */
+        :root:not([data-theme="dark"]),
+        [data-theme="light"] {
+            --pico-background-color: #eff1f5;
+            --pico-color: #4c4f69;
+            --pico-muted-color: #9ca0b0;
+            --pico-primary: #1e66f5;
+            --pico-primary-hover: #1754c7;
+            --pico-primary-focus: rgba(30, 102, 245, 0.25);
+            --pico-primary-inverse: #ffffff;
+            --pico-secondary: #8c8fa1;
+            --pico-secondary-hover: #6c6f85;
+            --pico-card-background-color: #ffffff;
+            --pico-card-border-color: #ccd0da;
+            --pico-card-sectioning-background-color: #e6e9ef;
+            --pico-form-element-background-color: #ffffff;
+            --pico-form-element-border-color: #ccd0da;
+            --pico-form-element-focus-color: var(--pico-primary);
+            --pico-code-background-color: #e6e9ef;
+            --pico-code-color: #4c4f69;
+            --pico-table-border-color: #ccd0da;
+            --pico-muted-border-color: #ccd0da;
+        }
+
+        /* ===== Catppuccin Mocha (Dark) ===== */
+        [data-theme="dark"] {
+            --pico-background-color: #1e1e2e;
+            --pico-color: #cdd6f4;
+            --pico-muted-color: #a6adc8;
+            --pico-primary: #89b4fa;
+            --pico-primary-hover: #b4d0fb;
+            --pico-primary-focus: rgba(137, 180, 250, 0.25);
+            --pico-primary-inverse: #1e1e2e;
+            --pico-secondary: #a6adc8;
+            --pico-secondary-hover: #bac2de;
+            --pico-card-background-color: #313244;
+            --pico-card-border-color: #45475a;
+            --pico-card-sectioning-background-color: #181825;
+            --pico-form-element-background-color: #313244;
+            --pico-form-element-border-color: #45475a;
+            --pico-form-element-focus-color: var(--pico-primary);
+            --pico-code-background-color: #181825;
+            --pico-code-color: #cdd6f4;
+            --pico-table-border-color: #45475a;
+            --pico-muted-border-color: #45475a;
+        }
+
+        /* ===== Backward-compatible aliases ===== */
+        :root, [data-theme="light"] {
+            --color-bg: var(--pico-background-color);
+            --color-surface: var(--pico-card-background-color);
+            --color-text: var(--pico-color);
+            --color-text-muted: var(--pico-muted-color);
+            --color-border: var(--pico-card-border-color);
+            --color-primary: var(--pico-primary);
+            --color-primary-hover: var(--pico-primary-hover);
+            --color-error: #d20f39;
+            --color-error-bg: #fce4e8;
+            --color-success: #40a02b;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         [data-theme="dark"] {
-            --color-bg: #1a1a2e;
-            --color-surface: #252542;
-            --color-text: #e8e8e8;
-            --color-text-muted: #a0a0a0;
-            --color-border: #3d3d5c;
-            --color-primary: #5c9ce6;
-            --color-primary-hover: #7ab3f0;
+            --color-error: #f38ba8;
+            --color-error-bg: #3d2a2a;
+            --color-success: #a6e3a1;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
-        /* ===== Base Styles ===== */
-        * { box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                         Helvetica, Arial, sans-serif;
-            background: var(--color-bg);
-            color: var(--color-text);
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            line-height: 1.6;
-            transition: background 0.3s, color 0.3s;
+        /* ===== Code font ===== */
+        pre, code, kbd, samp {
+            font-family: 'JetBrains Mono Nerd Font', monospace;
         }
 
         /* ===== Header ===== */
         .site-header {
-            background: var(--color-surface);
-            border-bottom: 1px solid var(--color-border);
+            background: var(--pico-card-background-color);
+            border-bottom: 1px solid var(--pico-card-border-color);
             padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .site-logo {
+        .site-header .site-logo {
             display: flex;
             align-items: center;
             gap: 10px;
-            text-decoration: none;
-            color: var(--color-text);
+            text-decoration: none !important;
+            color: inherit !important;
             font-weight: 600;
             font-size: 18px;
         }
@@ -74,40 +113,33 @@
         [data-theme="dark"] .logo-light { display: none; }
 
         .theme-toggle {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
+            background: var(--pico-card-background-color);
+            border: 1px solid var(--pico-card-border-color);
             border-radius: 6px;
             padding: 8px 12px;
             cursor: pointer;
             font-size: 16px;
+            color: var(--pico-color);
             transition: background 0.2s;
         }
 
         .theme-toggle:hover {
-            background: var(--color-bg);
+            background: var(--pico-background-color);
         }
 
         /* ===== Main Content ===== */
-        main {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 32px 20px;
-        }
-
-        h1 {
-            margin: 0 0 8px 0;
-            font-size: 28px;
+        main.container {
+            --pico-container-max-width: 900px;
         }
 
         .tagline {
-            color: var(--color-text-muted);
+            color: var(--pico-muted-color);
             margin: 0 0 32px 0;
-            font-size: 16px;
         }
 
         /* ===== Search ===== */
         .search-container {
-            background: var(--color-surface);
+            background: var(--pico-card-background-color);
             border-radius: 12px;
             padding: 20px;
             box-shadow: var(--shadow);
@@ -123,43 +155,19 @@
             left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--color-text-muted);
+            color: var(--pico-muted-color);
             pointer-events: none;
         }
 
         #search-input {
-            width: 100%;
-            padding: 14px 14px 14px 44px;
-            border: 2px solid var(--color-border);
-            border-radius: 8px;
-            background: var(--color-bg);
-            color: var(--color-text);
-            font-size: 16px;
-            transition: border-color 0.2s;
-        }
-
-        #search-input:focus {
-            outline: none;
-            border-color: var(--color-primary);
-        }
-
-        #search-input::placeholder {
-            color: var(--color-text-muted);
+            padding-left: 44px;
+            margin-bottom: 0;
         }
 
         .search-hint {
             margin: 10px 0 0 0;
             font-size: 13px;
-            color: var(--color-text-muted);
-        }
-
-        .search-hint kbd {
-            background: var(--color-bg);
-            border: 1px solid var(--color-border);
-            border-radius: 4px;
-            padding: 2px 6px;
-            font-family: inherit;
-            font-size: 12px;
+            color: var(--pico-muted-color);
         }
 
         /* ===== Tool List ===== */
@@ -170,15 +178,15 @@
         .tools-section h2 {
             font-size: 18px;
             margin: 0 0 16px 0;
-            color: var(--color-text-muted);
+            color: var(--pico-muted-color);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             font-weight: 600;
         }
 
-        .tool-list {
-            list-style: none;
-            padding: 0;
+        ul.tool-list {
+            list-style-type: none;
+            padding-left: 0;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -186,7 +194,8 @@
         }
 
         .tool-item {
-            background: var(--color-surface);
+            list-style-type: none;
+            background: var(--pico-card-background-color);
             border-radius: 8px;
             box-shadow: var(--shadow);
             transition: transform 0.15s, box-shadow 0.15s;
@@ -206,13 +215,13 @@
 
         .tool-title {
             font-weight: 600;
-            color: var(--color-text);
+            color: var(--pico-color);
             margin-bottom: 4px;
         }
 
         .tool-description {
             font-size: 14px;
-            color: var(--color-text-muted);
+            color: var(--pico-muted-color);
             margin: 0;
         }
 
@@ -221,11 +230,11 @@
         }
 
         .no-results {
-            background: var(--color-surface);
+            background: var(--pico-card-background-color);
             border-radius: 8px;
             padding: 24px;
             text-align: center;
-            color: var(--color-text-muted);
+            color: var(--pico-muted-color);
             display: none;
         }
 
@@ -235,11 +244,11 @@
 
         /* ===== Empty State ===== */
         .empty-state {
-            background: var(--color-surface);
+            background: var(--pico-card-background-color);
             border-radius: 8px;
             padding: 48px 24px;
             text-align: center;
-            color: var(--color-text-muted);
+            color: var(--pico-muted-color);
         }
 
         .empty-state p {
@@ -250,14 +259,14 @@
         .site-footer {
             text-align: center;
             padding: 24px;
-            color: var(--color-text-muted);
+            color: var(--pico-muted-color);
             font-size: 14px;
-            border-top: 1px solid var(--color-border);
+            border-top: 1px solid var(--pico-card-border-color);
             margin-top: 48px;
         }
 
         .site-footer a {
-            color: var(--color-primary);
+            color: var(--pico-primary);
             text-decoration: none;
         }
 
@@ -267,8 +276,6 @@
 
         /* ===== Responsive ===== */
         @media (max-width: 600px) {
-            main { padding: 20px 12px; }
-            h1 { font-size: 24px; }
             .search-container { padding: 16px; }
         }
     </style>
@@ -285,7 +292,7 @@
         </button>
     </header>
 
-    <main>
+    <main class="container">
         <h1>Tools</h1>
         <p class="tagline">A collection of single-file HTML tools, built with the help of LLMs.</p>
 

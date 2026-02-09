@@ -317,35 +317,10 @@
     margin-left: 8px;
 }
 
-/* ===== Buttons ===== */
-button {
-    background: var(--color-primary);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: background 0.2s;
-}
-
-button:hover {
-    background: var(--color-primary-hover);
-}
-
-button.secondary {
-    background: var(--color-border);
-    color: var(--color-text);
-}
-
-button.secondary:hover {
-    background: var(--color-text-muted);
-    color: white;
-}
-
+/* ===== Button overrides ===== */
 button.copied {
-    background: var(--color-success);
+    background: var(--color-success) !important;
+    border-color: var(--color-success) !important;
 }
 
 /* ===== Error ===== */
