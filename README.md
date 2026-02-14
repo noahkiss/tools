@@ -30,12 +30,12 @@ View the live tools at: **https://noahkiss.github.io/tools/**
 
 This repository follows a philosophy of **single-file simplicity**:
 
-- Every tool is one `.html` file
-- No build step, no bundlers, no frameworks
-- Dependencies loaded from CDNs when needed
+- Every tool outputs one `.html` file with inline CSS and JS
+- Source files (`content.html`, `styles.css`, `script.js`, `docs.md`) are combined via a lightweight `build.py` template system
+- No bundlers, no frameworks—just vanilla JS and CDN dependencies
 - Tools are small enough for any LLM to read and modify
 
-See [AGENTS.md](AGENTS.md) for instructions on creating new tools.
+See [AGENTS.md](AGENTS.md) for conventions and patterns.
 
 ---
 
