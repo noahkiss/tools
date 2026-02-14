@@ -1,3 +1,4 @@
+<!-- title: HAR Analyzer -->
 <!-- category: Development -->
 <!-- max-width: 1200px -->
 

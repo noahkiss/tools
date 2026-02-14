@@ -3,40 +3,43 @@
 Build script for Noah's Tools
 
 This script:
-1. Builds index.html for each tool from template + source files
-2. Generates tools.json from tool metadata
-3. Updates the main index.html with tools data
+1. Validates tool source files for common issues
+2. Builds index.html for each tool from template + source files
+3. Generates tools.json from tool metadata
+4. Updates the main index.html with tools data
 
 Tool source structure:
 - {tool-name}/content.html  - Main HTML content
 - {tool-name}/styles.css    - Tool-specific CSS
 - {tool-name}/script.js     - Tool-specific JavaScript
-- {tool-name}/docs.md       - Description and metadata (category, max-width)
+- {tool-name}/docs.md       - Description and metadata (title, category, max-width)
 
 Usage:
     python build.py
+    python build.py validate   # Run validation only
 """
 
 import json
 import re
+import sys
 from pathlib import Path
 
+# Directories to skip when scanning for tools
+EXCLUDE_DIRS = {".git", ".github", ".claude", "node_modules", "__pycache__", "assets"}
 
-def extract_title_from_content(content_path: Path) -> str:
-    """Extract title from the first h1 in content.html, or derive from folder name."""
-    if content_path.exists():
-        try:
-            content = content_path.read_text("utf-8")
-            # Look for first text that would be a title
-            # The h1 is now in the template, so use folder name
-        except OSError:
-            pass
-    return content_path.parent.name.replace("-", " ").title()
+KNOWN_CATEGORIES = {"Text & Data", "Image & Media", "Development", "Utilities"}
 
 
 def extract_metadata(docs_path: Path) -> dict:
-    """Extract metadata from docs.md comments."""
+    """Extract metadata from docs.md comments.
+
+    Supported metadata comments:
+    - <!-- title: Display Name -->
+    - <!-- category: Text & Data -->
+    - <!-- max-width: 1200px -->
+    """
     metadata = {
+        "title": "",
         "category": "Utilities",
         "max_width": "900px",
         "description": "",
@@ -47,6 +50,11 @@ def extract_metadata(docs_path: Path) -> dict:
 
     try:
         content = docs_path.read_text("utf-8")
+
+        # Extract title
+        match = re.search(r"<!--\s*title:\s*(.+?)\s*-->", content, re.IGNORECASE)
+        if match:
+            metadata["title"] = match.group(1).strip()
 
         # Extract category
         match = re.search(r"<!--\s*category:\s*(.+?)\s*-->", content, re.IGNORECASE)
@@ -76,6 +84,13 @@ def extract_metadata(docs_path: Path) -> dict:
     return metadata
 
 
+def get_title(tool_dir: Path, metadata: dict) -> str:
+    """Get display title from metadata, falling back to folder name."""
+    if metadata["title"]:
+        return metadata["title"]
+    return tool_dir.name.replace("-", " ").title()
+
+
 def build_tool_html(tool_dir: Path, template: str) -> bool:
     """Build index.html for a tool from template and source files."""
     content_path = tool_dir / "content.html"
@@ -84,43 +99,104 @@ def build_tool_html(tool_dir: Path, template: str) -> bool:
     docs_path = tool_dir / "docs.md"
     index_path = tool_dir / "index.html"
 
-    # Check if source files exist
     if not content_path.exists():
-        return False  # Not a template-based tool
+        return False
 
     # Read source files
-    content = content_path.read_text("utf-8") if content_path.exists() else ""
+    content = content_path.read_text("utf-8")
     styles = styles_path.read_text("utf-8") if styles_path.exists() else ""
     script = script_path.read_text("utf-8") if script_path.exists() else ""
 
-    # Get metadata
+    # Get metadata and title
     metadata = extract_metadata(docs_path)
-
-    # Derive title from folder name (capitalize properly)
-    title = tool_dir.name.replace("-", " ").title()
-    # Special case handling
-    if tool_dir.name == "jiradown":
-        title = "Jiradown"
-    elif tool_dir.name == "stfu":
-        title = "STFU"
-    elif tool_dir.name == "har-analyzer":
-        title = "HAR Analyzer"
+    title = get_title(tool_dir, metadata)
 
     # Build the HTML
     html = template
     html = html.replace("{{TITLE}}", title)
     html = html.replace("{{DESCRIPTION}}", metadata["description"])
     html = html.replace("{{MAX_WIDTH}}", metadata["max_width"])
-
-    # Insert content, styles, and script without extra indentation
-    # (indentation in source files is preserved as-is)
     html = html.replace("{{CONTENT}}", content)
     html = html.replace("{{STYLES}}", styles)
     html = html.replace("{{SCRIPT}}", script)
 
-    # Write the built HTML
     index_path.write_text(html, "utf-8")
     return True
+
+
+def find_tool_dirs(tools_dir: Path) -> list[Path]:
+    """Find all tool directories."""
+    dirs = []
+    for subdir in sorted(tools_dir.iterdir()):
+        if not subdir.is_dir():
+            continue
+        if subdir.name.startswith((".", "_")):
+            continue
+        if subdir.name in EXCLUDE_DIRS:
+            continue
+        # Must have either content.html (template-based) or index.html (legacy)
+        if not (subdir / "content.html").exists() and not (subdir / "index.html").exists():
+            continue
+        dirs.append(subdir)
+    return dirs
+
+
+def validate_tools(tool_dirs: list[Path]) -> tuple[list[str], list[str]]:
+    """Validate tool source files. Returns (errors, warnings)."""
+    errors = []
+    warnings = []
+
+    for tool_dir in tool_dirs:
+        name = tool_dir.name
+
+        # Required: content.html
+        if not (tool_dir / "content.html").exists():
+            if (tool_dir / "index.html").exists():
+                warnings.append(f"{name}: legacy tool (no content.html, has index.html)")
+            else:
+                errors.append(f"{name}: missing content.html")
+            continue
+
+        # Recommended files
+        for filename in ("styles.css", "script.js", "docs.md"):
+            if not (tool_dir / filename).exists():
+                warnings.append(f"{name}: missing {filename}")
+
+        # Validate docs.md
+        docs_path = tool_dir / "docs.md"
+        if docs_path.exists():
+            metadata = extract_metadata(docs_path)
+
+            if not metadata["description"]:
+                warnings.append(f"{name}: docs.md has no description")
+
+            if metadata["category"] not in KNOWN_CATEGORIES:
+                warnings.append(
+                    f"{name}: unknown category '{metadata['category']}' "
+                    f"(known: {', '.join(sorted(KNOWN_CATEGORIES))})"
+                )
+
+        # Validate content.html doesn't contain full HTML document tags
+        content = (tool_dir / "content.html").read_text("utf-8")
+        for tag in ("<html", "<head", "<body"):
+            if tag in content.lower():
+                warnings.append(
+                    f"{name}: content.html contains {tag}> tag "
+                    f"(should only contain content inside <article>)"
+                )
+
+        # Check for hardcoded hex colors in styles.css
+        styles_path = tool_dir / "styles.css"
+        if styles_path.exists():
+            styles = styles_path.read_text("utf-8")
+            hex_matches = re.findall(r"#[0-9a-fA-F]{3,8}\b", styles)
+            if hex_matches:
+                warnings.append(
+                    f"{name}: styles.css has hardcoded colors "
+                    f"({', '.join(hex_matches[:3])}...) - prefer CSS variables"
+                )
+
+    return errors, warnings
 
 
 def find_and_build_tools(tools_dir: Path) -> list:
@@ -135,51 +211,33 @@ def find_and_build_tools(tools_dir: Path) -> list:
     else:
         template = template_path.read_text("utf-8")
 
-    # Directories to exclude
-    exclude_dirs = {".git", ".github", ".claude", "node_modules", "__pycache__", "assets"}
+    tool_dirs = find_tool_dirs(tools_dir)
 
-    # Find folder-based tools
-    for subdir in sorted(tools_dir.iterdir()):
-        if not subdir.is_dir():
-            continue
-        if subdir.name.startswith((".", "_")):
-            continue
-        if subdir.name in exclude_dirs:
-            continue
+    # Validate
+    errors, warnings = validate_tools(tool_dirs)
+    for w in warnings:
+        print(f"  WARN: {w}")
+    for e in errors:
+        print(f"  ERROR: {e}")
+    if errors:
+        print(f"\n{len(errors)} error(s) found. Fix before building.")
+        sys.exit(1)
 
-        docs_path = subdir / "docs.md"
-        content_path = subdir / "content.html"
-        index_path = subdir / "index.html"
-
-        # Must have either content.html (template-based) or index.html (legacy)
-        if not content_path.exists() and not index_path.exists():
-            continue
-
-        # Build from template if source files exist
-        if template and content_path.exists():
+    # Build each tool
+    for subdir in tool_dirs:
+        if template and (subdir / "content.html").exists():
             if build_tool_html(subdir, template):
                 print(f"  Built: {subdir.name}/index.html")
 
-        # Get metadata
-        metadata = extract_metadata(docs_path)
+        metadata = extract_metadata(subdir / "docs.md")
+        title = get_title(subdir, metadata)
 
-        # Derive title
-        title = subdir.name.replace("-", " ").title()
-        if subdir.name == "jiradown":
-            title = "Jiradown"
-        elif subdir.name == "stfu":
-            title = "STFU"
-        elif subdir.name == "har-analyzer":
-            title = "HAR Analyzer"
-
-        tool = {
+        tools.append({
             "slug": subdir.name,
             "title": title,
             "description": metadata["description"],
             "category": metadata["category"],
-        }
-
-        tools.append(tool)
+        })
 
     return tools
 
@@ -191,7 +249,6 @@ def update_main_index(index_path: Path, tools: list):
 
     content = index_path.read_text("utf-8")
 
-    # Find and replace the tools array
     tools_json = json.dumps(tools, indent=8)
     tools_json = tools_json.replace("\n", "\n        ")
 
@@ -208,6 +265,18 @@ def update_main_index(index_path: Path, tools: list):
 
 def main():
     tools_dir = Path(__file__).parent
+
+    # Check for validate-only mode
+    if len(sys.argv) > 1 and sys.argv[1] == "validate":
+        tool_dirs = find_tool_dirs(tools_dir)
+        errors, warnings = validate_tools(tool_dirs)
+        for w in warnings:
+            print(f"  WARN: {w}")
+        for e in errors:
+            print(f"  ERROR: {e}")
+        if not errors and not warnings:
+            print("All tools valid.")
+        sys.exit(1 if errors else 0)
 
     print("Building tools...")
     tools = find_and_build_tools(tools_dir)

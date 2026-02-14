@@ -4,6 +4,8 @@ This repository contains single-file HTML tools hosted via GitHub Pages. Each to
 
 > **Meta-Instruction**: This file should be self-updating. When you make structural changes to the repository, add new patterns, or establish new conventions, update this file to reflect those changes. Future Claude instances should always have accurate, up-to-date instructions.
 
+> **Slash Command Sync**: When updating workflows in this file, also update `.claude/commands/tool.md` to match. The slash command is what gets loaded when users run `/tool`, so it must stay in sync with these instructions.
+
 > **Commit Policy**: Always commit and push after completing atomic units of work. Don't leave uncommitted changes. If you've made a meaningful change, commit it.
 
 ## Quick Start
@@ -24,19 +26,9 @@ Use the **`/tool` slash command** to create new tools. It handles the full workf
 
 ---
 
-## Creating a New Tool
+## Tool Structure
 
-### Step 1: Understand the Request
-
-When the user describes a tool idea:
-1. Clarify the core use case (what problem does it solve?)
-2. Identify inputs and outputs
-3. Determine if external libraries are needed
-4. Consider edge cases and error states
-
-### Step 2: Create the Tool Folder
-
-**Structure**: Each tool lives in its own folder with source files:
+Each tool lives in its own folder with source files:
 
 ```
 {tool-name}/
@@ -49,84 +41,28 @@ When the user describes a tool idea:
 
 **Naming**: Use kebab-case for folder names (e.g., `json-formatter/`, `color-picker/`)
 
-**URLs**: This gives clean URLs without `.html` extension:
-- `https://noahkiss.github.io/tools/json-formatter/`
-- `https://noahkiss.github.io/tools/color-picker/`
-
 **How it works**:
 - `_template.html` contains the shared layout (header, footer, theme toggle)
 - `build.py` combines template + source files to generate `index.html`
 - A GitHub Action runs the build automatically on push
 - **Never edit `index.html` directly** - it will be overwritten
 
-**Source files**:
+**docs.md** - Category comment + 1-2 sentence description:
 
-`content.html` - The main content that goes inside the `<article>` tag:
-```html
-<div class="my-tool">
-    <input type="text" id="input" placeholder="Enter text...">
-    <button id="convert">Convert</button>
-    <output id="result"></output>
-</div>
-```
-
-`styles.css` - Tool-specific styles (theme variables are available):
-```css
-.my-tool {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-#result {
-    background: var(--color-bg);
-    padding: 12px;
-    border-radius: 6px;
-}
-```
-
-`script.js` - Tool-specific JavaScript:
-```javascript
-document.getElementById('convert').addEventListener('click', () => {
-    const input = document.getElementById('input').value;
-    document.getElementById('result').textContent = processInput(input);
-});
-
-function processInput(text) {
-    // Your logic here
-    return text.toUpperCase();
-}
-```
-
-### Step 3: Create Documentation
-
-**Filename**: `{tool-name}/docs.md` (inside the tool folder)
-
-**Content**: 1-2 sentences max. Describe what the tool does at a high level. This appears on the landing page, so keep it scannable.
-
-**Metadata** (HTML comments at top of file):
-- `<!-- category: Text & Data -->` - Which section on the landing page
-- `<!-- max-width: 1400px -->` - Override default 900px max-width for wider tools
-
-**Avoid**:
-- Syntax examples or code snippets (e.g., `` `{code:js}` ``)
-- Listing every feature supported
-- Technical implementation details
-
-Example:
 ```markdown
+<!-- title: Display Name -->
 <!-- category: Text & Data -->
 <!-- max-width: 1200px -->
 
 Bidirectional converter between Jira wiki markup and Markdown. Edit either pane and the other updates in real-time.
 ```
 
-### Step 4: Update the Index
+Metadata (HTML comments at top of file):
+- `<!-- title: Display Name -->` - Override auto-generated title (e.g., for acronyms like STFU)
+- `<!-- category: Text & Data -->` - Which section on the landing page
+- `<!-- max-width: 1400px -->` - Override default 900px max-width for wider tools
 
-Add the new tool to `README.md` under the appropriate category with a link:
-```markdown
-- [Tool Name](https://noahkiss.github.io/tools/tool-name) brief description
-```
+Available categories: Text & Data, Image & Media, Development, Utilities
 
 ---
 
@@ -452,164 +388,8 @@ shareContent({
 });
 ```
 
----
-
-## UI/UX Patterns
-
-### Base CSS Template
-```css
-* {
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                 Helvetica, Arial, sans-serif;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
-    line-height: 1.6;
-    color: #333;
-    background: #f5f5f5;
-}
-
-.container {
-    background: white;
-    padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-h1 {
-    margin-top: 0;
-    font-size: 24px;
-}
-
-/* Mobile responsive */
-@media (max-width: 600px) {
-    body { padding: 12px; }
-    .container { padding: 16px; }
-    h1 { font-size: 20px; }
-}
-```
-
-### Form Elements
-```css
-input[type="text"],
-input[type="url"],
-textarea,
-select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 2px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-    outline: none;
-    border-color: #4a90e2;
-}
-
-textarea {
-    min-height: 120px;
-    resize: vertical;
-    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-}
-```
-
-### Buttons
-```css
-button {
-    background: #4a90e2;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    font-family: inherit;
-}
-
-button:hover {
-    background: #357abd;
-}
-
-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-}
-
-button.secondary {
-    background: #6c757d;
-}
-
-button.danger {
-    background: #dc3545;
-}
-```
-
-### Copy to Clipboard Pattern
-```javascript
-function copyToClipboard(text, button) {
-    navigator.clipboard.writeText(text).then(() => {
-        const originalText = button.textContent;
-        button.textContent = 'Copied!';
-        button.classList.add('copied');
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.classList.remove('copied');
-        }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy:', err);
-        // Fallback for older browsers
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-    });
-}
-```
-
-### Error Display Pattern
-```html
-<div id="error" class="error"></div>
-
-<style>
-.error {
-    color: #dc3545;
-    background: #f8d7da;
-    border: 1px solid #f5c6cb;
-    padding: 12px;
-    border-radius: 4px;
-    margin: 10px 0;
-    display: none;
-}
-
-.error.visible {
-    display: block;
-}
-</style>
-
-<script>
-function showError(message) {
-    const errorDiv = document.getElementById('error');
-    errorDiv.textContent = message;
-    errorDiv.classList.add('visible');
-}
-
-function hideError() {
-    document.getElementById('error').classList.remove('visible');
-}
-</script>
-```
-
 ### Loading State Pattern
+
 ```javascript
 async function processWithLoading(button, asyncFn) {
     const originalText = button.textContent;
@@ -626,6 +406,7 @@ async function processWithLoading(button, asyncFn) {
 ```
 
 ### File Input with Drag & Drop
+
 ```html
 <div id="dropzone" class="dropzone">
     Drag and drop a file here, or click to select
@@ -680,9 +461,7 @@ function handleFiles(files) {
 </script>
 ```
 
----
-
-## Real-Time vs Button-Triggered Processing
+### Real-Time vs Button-Triggered Processing
 
 **Use real-time processing** (`input` event) when:
 - The operation is instant (< 50ms)
@@ -699,12 +478,13 @@ function handleFiles(files) {
 
 ## Testing Tools Locally
 
-Start a local server in the repo directory:
+Build and start a local server:
 ```bash
-python -m http.server 8000
+uv run python build.py
+uv run python -m http.server 8787
 ```
 
-Then open `http://localhost:8000/tool-name/` in a browser (note the trailing slash).
+Then open `http://localhost:8787/tool-name/` in a browser (note the trailing slash).
 
 ---
 
@@ -729,82 +509,35 @@ Before considering a tool complete:
 - [ ] Handles empty/invalid input gracefully
 - [ ] Copy button works (if applicable)
 - [ ] No console errors
+- [ ] Both light and dark modes look correct
 - [ ] Documentation file created
 - [ ] Added to README.md
 
 ---
 
-## Templates
+## How Theming Works
 
-Templates live in the **`_templates/`** folder:
+The template uses **Pico CSS v2** with **Catppuccin** color palettes (Latte for light, Mocha for dark).
 
-| Template | Purpose |
+**Available CSS variables** (use these in `styles.css`):
+
+| Variable | Maps to |
 |----------|---------|
-| `base.html` | Standard tool template with theming |
+| `--color-bg` | `--pico-background-color` |
+| `--color-surface` | `--pico-card-background-color` |
+| `--color-text` | `--pico-color` |
+| `--color-text-muted` | `--pico-muted-color` |
+| `--color-border` | `--pico-card-border-color` |
+| `--color-primary` | `--pico-primary` |
+| `--color-primary-hover` | `--pico-primary-hover` |
+| `--color-error` | Catppuccin red |
+| `--color-error-bg` | Catppuccin red bg |
+| `--color-success` | Catppuccin green |
+| `--shadow` | Theme-appropriate shadow |
 
-To preview a template locally:
-```bash
-python -m http.server 8000
-# Open http://localhost:8000/_templates/base.html
-```
+The `--color-*` aliases exist for backward compatibility. Prefer them in tool CSS for portability. You can also use Pico's built-in variables directly (`--pico-primary`, etc.).
 
-### Template Structure
-
-```
-<html data-theme="light">        <!-- Theme state stored here -->
-  <head>
-    <style>
-      :root { ... }              <!-- Light mode CSS variables -->
-      [data-theme="dark"] { ... } <!-- Dark mode overrides -->
-    </style>
-  </head>
-  <body>
-    <header class="site-header">  <!-- Logo + theme toggle -->
-    <main>
-      <article class="tool-container">  <!-- Your tool UI -->
-    </main>
-    <footer class="site-footer">  <!-- GitHub link -->
-  </body>
-</html>
-```
-
-### How Theming Works
-
-**CSS Variables**: All colors use CSS custom properties defined in `:root` (light) and `[data-theme="dark"]` (dark). Use these instead of hardcoded colors:
-
-| Variable | Purpose |
-|----------|---------|
-| `--color-bg` | Page background |
-| `--color-surface` | Card/container background |
-| `--color-text` | Primary text |
-| `--color-text-muted` | Secondary text |
-| `--color-border` | Borders and dividers |
-| `--color-primary` | Buttons, links, accents |
-| `--color-primary-hover` | Hover state for primary |
-| `--color-error` | Error text |
-| `--color-error-bg` | Error background |
-| `--color-success` | Success indicators |
-| `--shadow` | Box shadows |
-
-**Theme Toggle**: The toggle button switches `data-theme` on `<html>` between `"light"` and `"dark"`. User preference is saved to `localStorage` and restored on page load. System preference (`prefers-color-scheme`) is used as the default.
-
-**Logo Switching**: Two logo images are included with classes `.logo-light` and `.logo-dark`. CSS shows/hides the appropriate one based on the current theme.
-
-### Adding New Colors
-
-If you need additional theme-aware colors, add them to both `:root` and `[data-theme="dark"]`:
-
-```css
-:root {
-    --color-warning: #f0ad4e;
-}
-
-[data-theme="dark"] {
-    --color-warning: #ffcc00;
-}
-```
-
-Then use `var(--color-warning)` in your styles
+**Theme Toggle**: Switches `data-theme` on `<html>` between `"light"` and `"dark"`. Saved to `localStorage`, falls back to `prefers-color-scheme`.
 
 ---
 
@@ -834,24 +567,6 @@ git commit -m "Add {tool-name} tool"
 git push
 ```
 
-Or for all changes:
-
-```bash
-git add -A
-git commit -m "Add {tool-name} tool"
-git push
-```
-
-### Co-Author Attribution
-
-When Claude assists with creating a tool, include the co-author line:
-
-```bash
-git commit -m "Add {tool-name} tool
-
-Co-Authored-By: Claude <noreply@anthropic.com>"
-```
-
 ---
 
 ## Footer
@@ -864,42 +579,6 @@ The template includes `<script src="footer.js"></script>` which auto-injects a c
 The footer.js script automatically detects the current theme and styles itself accordingly using CSS variables.
 
 **Note**: The footer is not added to index.html (the homepage has its own footer).
-
----
-
-## Build Process
-
-Run `python build.py` to:
-1. Scan all tool folders (directories containing `index.html`)
-2. Extract titles from `<title>` tags
-3. Extract descriptions from `docs.md` files
-4. Generate `tools.json` with tool metadata
-5. Update `index.html` with the tools data for search
-
-The build script should be run after adding new tools to update the search index:
-
-```bash
-python build.py
-git add tools.json index.html
-git commit -m "Rebuild tools index"
-git push
-```
-
-### Category Support
-
-To assign a tool to a specific category, add a comment to the `docs.md` file:
-
-```markdown
-<!-- category: Text & Data -->
-
-This tool converts JSON to YAML format...
-```
-
-Available categories:
-- **Text & Data** - formatters, converters, parsers
-- **Image & Media** - image manipulation, media utilities
-- **Development** - code helpers, debugging tools
-- **Utilities** - calculators, generators, misc (default)
 
 ---
 
